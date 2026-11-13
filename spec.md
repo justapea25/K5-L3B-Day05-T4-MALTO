@@ -360,16 +360,33 @@
 
 | Ảnh / số | Màn hình / thành phần được chỉ tới | HAX / PAIR | Mức tự chủ thể hiện |
 |---|---|---|---|
-| **Ảnh #1** — tab ① Người mua, ca KB02 *(đính sau)* | **①** Nhãn đầu chat "Trợ lý AI · không tự hoàn tiền, không tự đóng khiếu nại"<br>**②** Thẻ đối chiếu 3 dòng, dòng "Mô tả lúc đặt: chưa xác minh"<br>**③** Thang độ chắc "Chưa đủ căn cứ · Hồ sơ không bị đóng" + dòng hạn tách riêng<br>**④** Nhật ký tool: `yeu_cau_bang_chung` nhãn Tự làm<br>**⑤** Hộp "Chuyển nhân viên xem xét?" | ① G1 · ② G11 · ③ G2, G10 · ⑤ G16 + PAIR "đường lui" | ④ `yeu_cau_bang_chung` tự làm (đơn đã rõ)<br>⑤ `chuyen_truong_nhom` tự làm **sau khi khách xác nhận** |
-| **Ảnh #2** — tab ③ Trưởng nhóm, ca KB02 *(đính sau)* | **⑥** Tóm tắt AI ghi "không phải phán quyết"<br>**⑦** Nút "Từ chối khiếu nại" bị khoá + dòng giải thích<br>**⑧** Hộp xác nhận hoàn tiền (số tiền + cảnh báo)<br>**⑨** Không có nút phạt shop | ⑥ G11 · ⑦ G10 · ⑧ G16 | ⑦ `tu_choi_khieu_nai` cần duyệt, chỉ mở khi shop phản hồi / quá 48h<br>⑧ `soan_hoan_tien` cần trưởng nhóm duyệt<br>⑨ `phat_shop` cấm |
+| **Ảnh #1** — [`anh1-nguoimua-KB02-danhso.png`](prototype/anh1-nguoimua-KB02-danhso.png)<br>Tab ① Người mua, ca KB02, bật nhãn HAX/PAIR | **①** Nhãn đầu chat "Trợ lý AI · không tự hoàn tiền, không tự đóng khiếu nại"<br>**②** Nút "Gặp nhân viên" luôn có ở góc chat<br>**③** Dòng hệ thống "Tin xin bằng chứng đã tới shop. Hạn phản hồi 48h."<br>**④** Tin AI "Đã chuyển thành công cho trưởng nhóm…" — chỉ hiện sau khi tool chạy xong<br>**⑤** Thẻ đối chiếu 3 dòng: "Mô tả hiện tại … SAU ngày bạn đặt", "Mô tả lúc đặt … theo ảnh bạn gửi — sàn chưa xác minh"<br>**⑥** Độ chắc "Chưa đủ căn cứ để xử lý. Hồ sơ không bị đóng." + thang 3 mức<br>**⑦** Dòng hạn "Hạn yêu cầu trả hàng: 19/11 — còn 6 ngày", tách khỏi trạng thái chờ | ① G1 · ② PAIR "đường lui" · ④ PAIR báo sau khi thành công · ⑤ G11 · ⑥ G2, G10 · ⑦ G2 | ③ `yeu_cau_bang_chung` **tự làm** (đơn đã rõ)<br>②④ `chuyen_truong_nhom` **tự làm sau khi khách xác nhận** |
+| **Ảnh #2** — [`anh2-truongnhom-KB02-danhso.png`](prototype/anh2-truongnhom-KB02-danhso.png)<br>Tab ③ Trưởng nhóm, ca KB02 | **⑧** "Trợ lý AI tóm tắt (không phải phán quyết)"<br>**⑨** Ô "Luật duyệt" bên phải<br>**⑩** Nút "Duyệt hoàn tiền" (bấm mới mở hộp xác nhận số tiền + cảnh báo "rất khó lấy lại")<br>**⑪** Nút "Từ chối khiếu nại" — chỉ mở vì dòng "Shop: đã phản hồi"<br>**⑫** Hàng nút không có "Phạt/khoá shop"; chỉ có "Chuyển bộ phận chuyên trách" | ⑧ G11 · ⑩ G16 · ⑪ G10 (hai bên cùng được nghe) | ⑩ `soan_hoan_tien` **cần trưởng nhóm duyệt**<br>⑪ `tu_choi_khieu_nai` **cần duyệt**, chỉ mở khi shop phản hồi / quá 48h<br>⑫ `phat_shop` **cấm** — không có nút |
+
+![Ảnh #1 — tab Người mua, KB02, đánh số ①–⑦](prototype/anh1-nguoimua-KB02-danhso.png)
+
+![Ảnh #2 — tab Trưởng nhóm, KB02, đánh số ⑧–⑫](prototype/anh2-truongnhom-KB02-danhso.png)
+
+**Ảnh phụ** (không đánh số, minh hoạ thêm):
+
+| File | Nội dung |
+|---|---|
+| [`case1-buyer-2.png`](prototype/case1-buyer-2.png), [`case1-staff.png`](prototype/case1-staff.png) | Bản gốc chưa đánh số của Ảnh #1 và Ảnh #2 |
+| [`case1-buyer-1.png`](prototype/case1-buyer-1.png) | KB02 lượt đầu: câu AI nguyên văn ở §3, thẻ đối chiếu, độ chắc "Chưa đủ căn cứ" |
+| [`case1-shop-owner.png`](prototype/case1-shop-owner.png) | KB02 phía người bán: thấy lần sửa mô tả 11/11, hạn 48h; ô "Sàn không hiển thị cho shop" (SĐT, địa chỉ, lời lẽ cảm xúc) |
+| [`case2-buyer-1.png`](prototype/case2-buyer-1.png) | KB07 lượt đầu: "mặc chật" không phải số đo, độ chắc "Thiếu thông tin", xin ảnh tem + số đo |
+| [`case2-buyer-2.png`](prototype/case2-buyer-2.png) | KB07 sau khi khách gửi ảnh: "chưa thấy căn cứ shop giao sai" nhưng **không đóng khiếu nại**; số đo ghi "người mua tự đo, trợ lý chưa xác minh" |
+| [`case2-shop-owner.png`](prototype/case2-shop-owner.png) | KB07 phía người bán: bảng size, ảnh khách gửi, sàn đề nghị shop gửi ảnh đóng gói |
+| [`case2-staff.png`](prototype/case2-staff.png) | KB07 phía trưởng nhóm: bằng chứng hai phía, tóm tắt AI không phán quyết |
+| [`bonus.png`](prototype/bonus.png) | Tab ④ AI thật (`gpt-4.1-mini`): xin SĐT và tin cụt → "Chỉ trả lời, không hành động", **không gọi tool**; panel ngữ cảnh đầy đủ và luật chặn phía server |
 
 **Quyết định thiết kế: độ chắc / bằng chứng / điều khiển tự chủ**
 
 | Đã cân nhắc | Nhóm chọn | Vì sao chọn | Loại phương án khác vì sao |
 |---|---|---|---|
-| Cách hiện độ chắc: % tin cậy / thang bằng lời | Thang 3 mức bằng lời: "Thiếu thông tin" · "Chưa đủ căn cứ" · "Đủ căn cứ để chuyển duyệt", luôn kèm câu "Hồ sơ không bị đóng" (Ảnh #1 ③) | Người mua và trưởng nhóm đọc ra ngay bước tiếp theo; mức cao nhất cũng chỉ là "đủ để **chuyển duyệt**", không phải "đủ để hoàn". | % dễ bị đọc là xác suất thắng kiện ("80% được hoàn") và AI không có cơ sở để tính con số đó. |
-| Cách hiện bằng chứng: đoạn văn giải thích / thẻ đối chiếu tách nguồn | Thẻ đối chiếu, mỗi dòng ghi nguồn: "theo đơn", "đã sửa 11/11", "chưa xác minh", "theo ảnh bạn gửi" (Ảnh #1 ②) | Chỉ ra đúng chỗ thiếu của lỗi ngữ cảnh KB02/KB07; cùng một thẻ dùng lại ở tab trưởng nhóm. | Đoạn văn trộn nguồn đã xác minh với lời kể, chính là lỗi KB02 (lấy mô tả hiện tại làm căn cứ). |
-| Điều khiển tự chủ: chỉ nói bằng lời / cảnh báo rồi vẫn cho làm / nhãn mức + khoá nút | Nhãn mức (Tự làm / Cần duyệt / Cấm) trên từng dòng nhật ký tool; hộp xác nhận cho chuyển người và hoàn tiền; nút từ chối khoá theo luật 48h; không có nút phạt (Ảnh #1 ④⑤, Ảnh #2 ⑦⑧⑨) | Mức tự chủ §4 nằm ở thiết kế màn hình, không phụ thuộc vào câu chữ AI. | Chỉ nói bằng lời thì không chặn được khi AI sai; cảnh báo xong vẫn cho bấm thì người duyệt vội vẫn đóng hồ sơ trước khi nghe shop. |
+| Cách hiện độ chắc: % tin cậy / thang bằng lời | Thang 3 mức bằng lời: "Thiếu thông tin" · "Chưa đủ căn cứ" · "Đủ căn cứ để chuyển duyệt", luôn kèm câu "Hồ sơ không bị đóng" (Ảnh #1 ⑥) | Người mua và trưởng nhóm đọc ra ngay bước tiếp theo; mức cao nhất cũng chỉ là "đủ để **chuyển duyệt**", không phải "đủ để hoàn". | % dễ bị đọc là xác suất thắng kiện ("80% được hoàn") và AI không có cơ sở để tính con số đó. |
+| Cách hiện bằng chứng: đoạn văn giải thích / thẻ đối chiếu tách nguồn | Thẻ đối chiếu, mỗi dòng ghi nguồn: "theo đơn", "đã sửa 11/11", "chưa xác minh", "theo ảnh bạn gửi" (Ảnh #1 ⑤) | Chỉ ra đúng chỗ thiếu của lỗi ngữ cảnh KB02/KB07; cùng một thẻ dùng lại ở tab trưởng nhóm. | Đoạn văn trộn nguồn đã xác minh với lời kể, chính là lỗi KB02 (lấy mô tả hiện tại làm căn cứ). |
+| Điều khiển tự chủ: chỉ nói bằng lời / cảnh báo rồi vẫn cho làm / nhãn mức + khoá nút | Nhãn mức (Tự làm / Cần duyệt / Cấm) trên từng dòng nhật ký tool; hộp xác nhận cho chuyển người và hoàn tiền; nút từ chối khoá theo luật 48h; không có nút phạt (Ảnh #1 ②③④, Ảnh #2 ⑨⑩⑪⑫) | Mức tự chủ §4 nằm ở thiết kế màn hình, không phụ thuộc vào câu chữ AI. | Chỉ nói bằng lời thì không chặn được khi AI sai; cảnh báo xong vẫn cho bấm thì người duyệt vội vẫn đóng hồ sơ trước khi nghe shop. |
 
 ---
 
