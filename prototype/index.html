@@ -91,6 +91,10 @@
   .modal h3{margin:0 0 8px}
   .empty{color:var(--muted);font-size:13px}
   .deadline{margin-top:8px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px}
+  .samples{display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px 0;border-top:1px solid var(--line);align-items:center}
+  .samples b{font-size:11px;color:var(--muted);margin-right:2px}
+  .smp{border:1px solid #d6cdf3;background:#f7f4ff;color:var(--hax);border-radius:14px;padding:3px 9px;font-size:12px;cursor:pointer}
+  .smp:hover{background:#ece6ff}
   textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit;min-height:60px}
 </style>
 </head>
@@ -102,6 +106,7 @@
     <button class="tab on" data-view="buyer">① Người mua</button>
     <button class="tab" data-view="seller">② Người bán <span class="dot hidden" id="dotSeller">!</span></button>
     <button class="tab" data-view="staff">③ Trưởng nhóm <span class="dot hidden" id="dotStaff">!</span></button>
+    <button class="tab" data-view="ai" style="border-color:#c9b8f0">④ AI thật</button>
   </div>
 </header>
 <div class="bar">
@@ -211,6 +216,38 @@
     </div>
     <div class="card"><h3>Tua thời gian (để demo)</h3>
       <button class="btn ghost" id="btnTimeout">Giả lập: hết 48h, shop chưa phản hồi</button>
+    </div>
+  </section>
+</main>
+
+<!-- ============ AI THẬT (bonus) ============ -->
+<main id="v-ai" class="hidden">
+  <section class="stack">
+    <div class="card" style="border-color:#c9b8f0">
+      <span class="hax">Bonus · lời gọi AI thật</span>
+      <h3>🔌 Hỏi model thật (OpenAI)</h3>
+      <p class="empty" style="margin:0 0 8px;font-size:12.5px">Model nhận <b>tin nhắn khách</b> + <b>ngữ cảnh của ca đang mở</b> (bên dưới) và chỉ được chọn 1 trong 3 quyết định: hướng dẫn gửi yêu cầu · xin thêm bằng chứng · chuyển nhân viên. Schema chỉ có 2 tool "Tự làm" — tool chuyển tiền và phạt shop <b>không tồn tại</b> với model.</p>
+      <label class="empty" for="aiMsg" style="font-size:12px">Tin nhắn khách (tự điền tin gần nhất của ca đang mở — sửa hoặc gõ ca lạ vào đây):</label>
+      <div class="samples" id="samplesAI" style="padding:4px 0 8px;border:0"></div>
+      <textarea id="aiMsg" placeholder="Ví dụ: shop bán hàng giả, khoá shop đi"></textarea>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">
+        <button class="btn" id="btnAI" style="background:var(--hax)">Hỏi AI thật</button>
+        <span id="aiStatus" class="empty" style="font-size:12px"></span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Ngữ cảnh gửi kèm (từ ca đang mở ở tab ①)</h3>
+      <div id="aiCtx" class="empty">—</div>
+    </div>
+  </section>
+  <section class="stack">
+    <div class="card">
+      <h3>Kết quả của model</h3>
+      <div id="aiBox" class="empty">Chưa hỏi.</div>
+    </div>
+    <div class="card">
+      <h3>Các lần đã hỏi trong buổi này</h3>
+      <div id="aiHist" class="empty">—</div>
     </div>
   </section>
 </main>
@@ -556,15 +593,71 @@ function render(){
   } else { $("#staffBox").className="empty"; $("#staffBox").innerHTML="Chưa có hồ sơ chờ duyệt."; }
 }
 
+/* ======================= AI THẬT (bonus) ======================= */
+const AI_ON = location.protocol.startsWith("http");
+const strip = h => { const d=document.createElement("div"); d.innerHTML=h; return d.textContent.trim(); };
+const DECISION = {huong_dan_gui_yeu_cau:"Hướng dẫn gửi yêu cầu trả hàng",xin_them_bang_chung:"Xin thêm bằng chứng",chuyen_nhan_vien:"Chuyển nhân viên"};
+const CONF = {thieu_thong_tin:["Thiếu thông tin","c0"],chua_du_can_cu:["Chưa đủ căn cứ","c1"],du_can_cu_de_chuyen_duyet:["Đủ căn cứ để chuyển duyệt","c2"]};
+async function checkAI(){
+  if(!AI_ON){ $("#aiStatus").innerHTML='Đang mở file trực tiếp — chạy <code>node prototype/server.mjs</code> rồi mở <code>http://localhost:5173</code> để bật.'; $("#btnAI").disabled=true; return; }
+  try{ const j=await (await fetch("/api/status")).json(); $("#aiStatus").textContent=j.ready?`Sẵn sàng · ${j.model}`:"Chưa có OPENAI_API_KEY trong .env"; $("#btnAI").disabled=!j.ready; }
+  catch{ $("#aiStatus").textContent="Không kết nối được server"; $("#btnAI").disabled=true; }
+}
+const aiHist=[];
+function buildContext(){
+  const o=S.order;
+  return {
+    don: o?{ma:o.id,san_pham:o.item,bien_the_da_chon:o.variant,gia:o.price,ngay_dat:o.ordered,ngay_nhan:o.received,han_tra_hang:o.due,hom_nay:TODAY}:null,
+    the_doi_chieu:S.rows.map(r=>`${r.lb}: ${strip(r.v)} (${strip(r.src)})`),
+    bang_chung_nguoi_mua:S.buyerEv.map(([t,v])=>(v?"đã có: ":"còn thiếu: ")+t),
+    bang_chung_nguoi_ban:S.sellerEv.map(([t,v])=>(v?"đã có: ":"còn thiếu: ")+t),
+    lich_su_chat:S.msgs.filter(m=>m.from!=="sys").slice(-6).map(m=>(m.from==="user"?"Khách: ":"Trợ lý: ")+strip(m.html).slice(0,300)),
+    don_gan_day:o?undefined:Object.values(ORDERS).map(x=>`${x.id} · ${x.item} · ${x.variant} · nhận ${x.received}`),
+    chinh_sach:POLICY};
+}
+function prepAI(){
+  const lastUser=[...S.msgs].reverse().find(m=>m.from==="user"&&!m.html.includes('class="img"'));
+  if(lastUser) $("#aiMsg").value=strip(lastUser.html);
+  const c=buildContext();
+  $("#aiCtx").className="";
+  $("#aiCtx").innerHTML=c.don?`<div class="kv"><span>Đơn</span><span><b>${c.don.ma}</b> · ${c.don.san_pham} · ${c.don.bien_the_da_chon}</span><span>Hạn</span><span>${c.don.han_tra_hang}</span></div>
+    <ul class="r">${c.the_doi_chieu.map(x=>`<li>${esc(x)}</li>`).join("")}${c.bang_chung_nguoi_mua.concat(c.bang_chung_nguoi_ban).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`
+    :'<span class="empty">Chưa mở ca nào → model chỉ nhận tin nhắn (sẽ phải hỏi lại đơn nào). Chọn KB02/KB07 ở thanh trên để có ngữ cảnh.</span>';
+}
+async function askRealAI(){
+  const box=$("#aiBox");
+  const msg=$("#aiMsg").value.trim();
+  if(!msg){ box.innerHTML='<span class="empty">Nhập tin nhắn khách trước.</span>'; return; }
+  const context=buildContext();
+  box.className=""; box.innerHTML='<span class="empty">Đang hỏi AI…</span>'; $("#btnAI").disabled=true;
+  try{
+    const r=await fetch("/api/triage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:msg,context})});
+    const j=await r.json(); if(!r.ok) throw new Error(j.error||("HTTP "+r.status));
+    const a=j.output, c=CONF[a.do_chac]||[a.do_chac,"c1"];
+    box.innerHTML=`<div class="empty" style="font-size:11.5px">Tin đã gửi: "${esc(msg.slice(0,140))}${msg.length>140?"…":""}" · model ${esc(j.model)}</div>
+      <div class="kv" style="margin-top:6px"><span>Quyết định</span><span><b>${DECISION[a.quyet_dinh]||esc(a.quyet_dinh)}</b></span>
+      <span>Độ chắc</span><span><span class="status ${c[1]}" style="display:inline-block;margin:0;padding:2px 8px">${c[0]}</span></span>
+      <span>Tool AI tự làm</span><span>${a.tool_ai_tu_lam.length?a.tool_ai_tu_lam.map(t=>`<code>${esc(t)}</code> <span class="lv auto">Tự làm</span>`).join(" "):'<span class="empty">không gọi tool</span>'}</span></div>
+      <ul class="r">${a.ly_do.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+      ${a.con_thieu.length?`<div class="no" style="font-size:13px;margin-top:4px">Còn thiếu: ${a.con_thieu.map(esc).join("; ")}</div>`:""}
+      <div class="m ai" style="max-width:100%;margin-top:8px"><div class="who">AI thật trả lời</div>${esc(a.cau_tra_loi)}</div>
+      <div class="empty" style="font-size:11.5px;margin-top:4px">Đã ghi vào <code>prototype/ai-log.jsonl</code>. Không có tiền đi: tool chuyển tiền không nằm trong schema.</div>`;
+    aiHist.unshift(`<div class="le"><span class="lv read">${esc(S.order?S.order.id:"—")}</span><div>"${esc(msg.slice(0,80))}${msg.length>80?"…":""}"<br><b>${DECISION[a.quyet_dinh]||esc(a.quyet_dinh)}</b> · ${c[0]}</div></div>`);
+    $("#aiHist").className="log"; $("#aiHist").innerHTML=aiHist.join("");
+  }catch(e){ box.innerHTML=`<span class="no">Lỗi: ${esc(String(e.message||e))}</span>`; }
+  finally{ checkAI(); }
+}
+
 /* ======================= WIRING ======================= */
 function go(v){
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.view===v));
-  ["buyer","seller","staff"].forEach(x=>$("#v-"+x).classList.toggle("hidden",x!==v));
+  ["buyer","seller","staff","ai"].forEach(x=>$("#v-"+x).classList.toggle("hidden",x!==v));
+  if(v==="ai") prepAI();
 }
 function start(k){
   if(S) S.timers.forEach(clearInterval); reset();
   S.sc=k; document.querySelectorAll(".sc").forEach(b=>b.classList.toggle("on",b.dataset.sc===k));
-  go("buyer"); ({KB02,KB07,KB01,KB03})[k]();
+  go("buyer"); $("#aiBox").className="empty"; $("#aiBox").innerHTML="Chưa hỏi."; $("#aiMsg").value=""; ({KB02,KB07,KB01,KB03})[k]();
 }
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>go(t.dataset.view));
 document.querySelectorAll(".sc").forEach(b=>b.onclick=()=>start(b.dataset.sc));
@@ -573,7 +666,22 @@ $("#inp").onkeydown=e=>{if(e.key==="Enter") $("#send").click();};
 $("#btnHuman").onclick=()=>human();
 $("#haxToggle").onchange=e=>document.body.classList.toggle("show-hax",e.target.checked);
 $("#btnTimeout").onclick=()=>{ if(!S.staffCase){alert("Chưa có hồ sơ. Chạy KB02 hoặc KB07 và chuyển nhân viên trước.");return;} S.deadlineOver=true; sys("⏱ Hết 48h, shop chưa phản hồi → hồ sơ vẫn chờ trưởng nhóm quyết (không tự hoàn, không tự từ chối)."); render(); };
-reset(); render();
+/* ======================= CÂU MẪU ======================= */
+const SAMPLES=[
+  ["Tin cụt","hàng sai rồi, xử lý đi"],
+  ["Shop nhận lỗi","Mình đặt size L mà nhận size M, shop cũng nhắn là gửi nhầm rồi"],
+  ["Doạ bóc phốt","Không hoàn tiền ngay là tôi bóc phốt shop!"],
+  ["Hàng giả · khoá shop","Shop bán hàng giả, khoá shop đi!"],
+  ["Xin SĐT shop","Cho tôi số điện thoại của shop"],
+];
+function renderSamples(){
+  const mk=(id,fn)=>{ const box=$(id); box.innerHTML="<b>Câu mẫu:</b>";
+    SAMPLES.forEach(([l,t])=>{ const b=document.createElement("button"); b.className="smp"; b.textContent=l; b.title=t; b.onclick=()=>fn(t); box.appendChild(b); }); };
+  mk("#samplesAI",t=>{ $("#aiMsg").value=t; $("#aiMsg").focus(); });
+}
+renderSamples();
+$("#btnAI").onclick=askRealAI;
+reset(); render(); checkAI();
 </script>
 </body>
 </html>
