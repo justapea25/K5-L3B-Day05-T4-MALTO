@@ -151,14 +151,14 @@
       <div id="evBox" class="empty">—</div>
     </div>
     <div class="card">
-      <span class="hax">G8 / G9 · huỷ, hoàn tác</span>
+      <span class="hax">G9 · rút lại được</span>
       <h3>Việc AI đã làm (theo mức tự chủ)</h3>
       <div class="log" id="log"><div class="empty">Chưa có hành động.</div></div>
     </div>
     <div class="card">
       <h3>Mức tự chủ của từng tool</h3>
       <table class="tools">
-        <tr><td><code>yeu_cau_bang_chung</code></td><td><span class="lv auto">Tự làm · 10s để huỷ trước khi tin đi</span></td></tr>
+        <tr><td><code>yeu_cau_bang_chung</code></td><td><span class="lv auto">Tự làm · chỉ gửi khi đã rõ đơn</span></td></tr>
         <tr><td><code>chuyen_truong_nhom</code></td><td><span class="lv auto">Tự làm sau khi người mua xác nhận · rút lại được</span></td></tr>
         <tr><td><code>soan_hoan_tien</code> <i>(= chuyển tiền thật)</i></td><td><span class="lv review">Trưởng nhóm duyệt</span></td></tr>
         <tr><td><code>tu_choi_khieu_nai</code></td><td><span class="lv review">Trưởng nhóm duyệt · chỉ sau khi shop phản hồi hoặc quá 48h</span></td></tr>
@@ -263,8 +263,8 @@ function openOrder(k){
 }
 function askSeller(what){
   if(S.log.some(x=>x.name==="yeu_cau_bang_chung"&&x.status!=="cancel")) return;
-  tool("yeu_cau_bang_chung",`Gửi shop mẫu xin bằng chứng: ${what} — hạn 48h`,"auto",{undoSeconds:10,
-    onCommit:()=>{S.sellerCase={what};sys("Tin xin bằng chứng đã tới shop. Hạn phản hồi 48h.");},onUndo:()=>{S.sellerCase=null}});
+  tool("yeu_cau_bang_chung",`Gửi shop mẫu xin bằng chứng: ${what} — hạn 48h`,"auto",{
+    onCommit:()=>{S.sellerCase={what};sys("Tin xin bằng chứng đã tới shop. Hạn phản hồi 48h.");}});
 }
 function confirmTransfer(note,after){
   modal("Chuyển nhân viên xem xét?",
@@ -302,7 +302,7 @@ function KB02_ev(){
   S.rows[2]={lb:"Mô tả lúc đặt",v:"<b>Xanh navy</b> (theo ảnh bạn gửi)",src:"ảnh của người mua — sàn chưa xác minh",c:"warn"};
   askSeller("bản mô tả lúc đặt và lý do sửa mô tả ngày 11/11");
   ai(`Mình đã nhận 2 ảnh và thêm vào hồ sơ. Ảnh xác nhận đơn của bạn ghi <b>Xanh navy</b> — mình ghi là "theo ảnh bạn gửi", vì mình không tự xác minh được ảnh.<br><br>
-Shop sẽ được báo trong giây lát và có <b>48 giờ</b> để phản hồi. Bạn có muốn mình chuyển hồ sơ cho nhân viên xem xét luôn không?`,
+Shop đã được báo và có <b>48 giờ</b> để phản hồi. Bạn có muốn mình chuyển hồ sơ cho nhân viên xem xét luôn không?`,
     [["Chuyển nhân viên xem xét",KB02_transfer],["Mình gửi nhầm ảnh",()=>{S.buyerEv=S.buyerEv.map(x=>[x[0],false]);S.rows[2]={lb:"Mô tả lúc đặt",v:"<b>Chưa xác minh</b>",src:"đã gỡ ảnh",c:"unk"};sys("Đã gỡ 2 ảnh khỏi hồ sơ. Bạn gửi lại khi sẵn sàng.");}],["Xem bên người bán",()=>go("seller")]],"G9 · sửa được");
 }
 function KB02_transfer(){
@@ -536,7 +536,7 @@ function render(){
       `<button class="btn" onclick="sellerRespond('ev')">Gửi bằng chứng / phản hồi</button><button class="btn ghost" onclick="sellerRespond('agree')">Đồng ý trả hàng hoàn tiền</button>`}</div>`;
     $("#sellerDeadline").className="";
     $("#sellerDeadline").innerHTML=S.sellerResponded?'<span class="ok">Đã phản hồi trong hạn.</span>':S.deadlineOver?'<span class="no"><b>Đã quá hạn</b> — hồ sơ vẫn do trưởng nhóm quyết.</span>':'<div class="countdown">47:59:12</div><div class="empty">đến 15/11 14:00</div>';
-  } else { $("#sellerBox").className="empty"; $("#sellerBox").innerHTML="Chưa có khiếu nại nào cần shop phản hồi.<br>(KB02, KB07: sàn gửi yêu cầu cho shop sau khi người mua gửi bằng chứng hoặc xác nhận chuyển nhân viên — tin đi sau 10s.)"; $("#sellerDeadline").innerHTML="—"; }
+  } else { $("#sellerBox").className="empty"; $("#sellerBox").innerHTML="Chưa có khiếu nại nào cần shop phản hồi.<br>(KB02, KB07: sàn gửi yêu cầu cho shop sau khi người mua gửi bằng chứng hoặc xác nhận chuyển nhân viên.)"; $("#sellerDeadline").innerHTML="—"; }
   // trưởng nhóm
   $("#dotStaff").classList.toggle("hidden",!(S.staffCase&&!S.closed));
   if(S.staffCase&&o){
