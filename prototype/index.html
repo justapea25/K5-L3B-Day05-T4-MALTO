@@ -587,7 +587,7 @@ function render(){
   // trưởng nhóm
   $("#dotStaff").classList.toggle("hidden",!(S.staffCase&&!S.closed));
   if(S.staffCase&&o){
-    const canReject=S.sellerResponded||S.deadlineOver||(S.staffCase.fast);
+    const canReject=S.sellerResponded||S.deadlineOver;
     $("#staffBox").className="";
     $("#staffBox").innerHTML=`<div class="kv"><span>Đơn</span><span><b>${o.id}</b> · ${o.item} · ${o.price}</span><span>Ưu tiên</span><span>${S.staffCase.fast?'<b class="ok">Duyệt nhanh</b> — shop đã nhận lỗi':'Thường'}</span></div>
      <p style="background:var(--info-bg);padding:8px;border-radius:8px"><b>Trợ lý AI tóm tắt (không phải phán quyết):</b> ${S.staffCase.note}</p>
