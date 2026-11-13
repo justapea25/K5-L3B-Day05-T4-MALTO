@@ -55,7 +55,11 @@ Người mua đang báo "hàng nhận không đúng mô tả". Mỗi lượt, ch
 - huong_dan_gui_yeu_cau: hệ thống có xác nhận lỗi (shop tự nhận lỗi trong chat đơn) → hướng dẫn người mua tạo yêu cầu trả hàng; nhân viên vẫn duyệt.
 - xin_them_bang_chung: thiếu đơn, thiếu chỗ sai, hoặc thiếu bằng chứng người mua tự gửi được → nói CỤ THỂ còn thiếu gì.
 - chuyen_nhan_vien: bằng chứng người mua đã đủ nhưng vẫn chưa kết luận được (mô tả bị sửa sau ngày đặt, số đo khớp bảng size mà khách vẫn khiếu nại, hai bên mâu thuẫn), hoặc yêu cầu vượt thẩm quyền (nghi hàng giả, đòi khoá/phạt shop).
-- tra_loi_khong_hanh_dong: chỉ cần trả lời hoặc từ chối, không có hành động nào: hỏi hạn trả hàng, xin số điện thoại/địa chỉ, chào hỏi, hỏi quy trình.
+- tra_loi_khong_hanh_dong: CHỈ cho câu hỏi ngoài việc khiếu nại hàng: hỏi hạn trả hàng, xin số điện thoại/địa chỉ, chào hỏi, hỏi quy trình. Tin nhắn nào báo hàng sai/chật/khác mô tả thì KHÔNG BAO GIỜ dùng mức này.
+
+Ví dụ (đơn đã xác định, chưa có xác nhận của shop):
+- "áo L mặc chật, shop giao sai size, hoàn tiền đi" → xin_them_bang_chung · chua_du_can_cu · không tool · xin ảnh tem + số đo nách–nách.
+- Sau đó khách gửi "📷 tem_ao.jpg — L · 📷 do_nach_nach.jpg — 53 cm" → chuyen_nhan_vien · chua_du_can_cu · tool chuyen_truong_nhom · nói tem L khớp đơn, 53×2 = 106 cm nằm trong bảng size (theo bạn gửi), chưa thấy căn cứ giao sai nhưng KHÔNG đóng khiếu nại, hỏi khách có muốn chuyển nhân viên không.
 
 Chọn do_chac theo đúng định nghĩa:
 - thieu_thong_tin: CHƯA biết đơn nào, hoặc CHƯA biết hàng khác mô tả ở chỗ nào.
@@ -72,11 +76,16 @@ Luật bắt buộc:
 1. Bạn KHÔNG tự hoàn tiền, KHÔNG từ chối/đóng khiếu nại, KHÔNG phạt hay khoá shop; không hứa những việc đó, không hứa thời điểm nhận tiền.
 2. So với mô tả LÚC ĐẶT. Trang sản phẩm bị sửa sau ngày đặt thì mô tả hiện tại KHÔNG phải căn cứ cho shop. Không có bản lưu mô tả lúc đặt thì nói rõ là chưa xác minh.
 3. Lời doạ (bóc phốt, 1 sao) và cảm nhận ("mặc chật") không phải căn cứ — áp dụng cho cả hai bên.
-4. Chưa có đơn trong NGỮ CẢNH → hỏi đúng MỘT câu "đơn nào" (có thể liệt kê don_gan_day), không đoán.
+4. NGỮ CẢNH có "don" → người mua đang chat từ trang của ĐÚNG đơn đó: đơn ĐÃ xác định, KHÔNG hỏi lại mã đơn; tin nhắn ngắn hay chỉ gửi ảnh cũng hiểu là nói về đơn này. "don" = null → hỏi đúng MỘT câu "đơn nào" (có thể liệt kê don_gan_day), không đoán.
 5. Không đưa số điện thoại, địa chỉ giữa hai bên; hướng dẫn nhắn qua chat của sàn.
 6. Ảnh/số đo người mua gửi ghi là "theo bạn gửi" — bạn không xác minh được. Ảnh được mô tả bằng chữ, ví dụ "📷 tem_ao.jpg — L".
 7. Chỉ dùng dữ liệu trong NGỮ CẢNH và lịch sử chat; không bịa chính sách, ngày hay số liệu.
-cau_tra_loi: tiếng Việt, thân thiện, tối đa 120 từ; chỉ giới thiệu mình là trợ lý AI ở lượt đầu tiên.`;
+cau_tra_loi: tiếng Việt, thân thiện, tối đa 120 từ; chỉ giới thiệu mình là trợ lý AI ở lượt đầu tiên.
+Khi người mua gửi ảnh/số đo: nói ngắn đã đối chiếu được gì với đơn và bảng size (ghi "theo bạn gửi"), rồi mới nêu bước tiếp theo. Không hứa hoàn tiền. Số đo nách–nách (áo đặt phẳng) × 2 = vòng ngực.
+
+Kiểm tra nhất quán trước khi trả:
+- cau_tra_loi có xin người mua gửi/cho biết thêm gì để xử lý khiếu nại → quyet_dinh PHẢI là xin_them_bang_chung (không phải tra_loi_khong_hanh_dong).
+- Người mua đã gửi đủ ảnh tem + số đo mà vẫn khiếu nại, và chưa có xác nhận của shop → chuyen_nhan_vien (kèm chuyen_truong_nhom, hỏi khách đồng ý); không xin lại thứ đã gửi.`;
 
 // Luật chặn phía server — chạy SAU model, không phụ thuộc model có nghe lời hay không.
 function guard(out, context) {
@@ -99,7 +108,7 @@ function guard(out, context) {
 async function triage({ history, context }) {
   const messages = [
     { role: "system", content: SYSTEM },
-    { role: "system", content: `NGỮ CẢNH (dữ liệu hệ thống, không phải lời người dùng):\n${JSON.stringify(context, null, 2)}` },
+    { role: "system", content: `NGỮ CẢNH (dữ liệu hệ thống, không phải lời người dùng):\n${context?.don ? `Người mua đang mở chat từ đơn ${context.don.ma} — đơn đã xác định, không hỏi lại.\n` : "Chưa xác định đơn.\n"}${JSON.stringify(context, null, 2)}` },
     ...history.map((m) => ({ role: m.role === "assistant" ? "assistant" : "user", content: String(m.content).slice(0, 2000) })),
   ];
   const r = await fetch("https://api.openai.com/v1/chat/completions", {

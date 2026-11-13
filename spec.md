@@ -371,14 +371,18 @@
 
 | File | Nội dung |
 |---|---|
-| [`case1-buyer-2.png`](prototype/case1-buyer-2.png), [`case1-staff.png`](prototype/case1-staff.png) | Bản gốc chưa đánh số của Ảnh #1 và Ảnh #2 |
-| [`case1-buyer-1.png`](prototype/case1-buyer-1.png) | KB02 lượt đầu: câu AI nguyên văn ở §3, thẻ đối chiếu, độ chắc "Chưa đủ căn cứ" |
-| [`case1-shop-owner.png`](prototype/case1-shop-owner.png) | KB02 phía người bán: thấy lần sửa mô tả 11/11, hạn 48h; ô "Sàn không hiển thị cho shop" (SĐT, địa chỉ, lời lẽ cảm xúc) |
-| [`case2-buyer-1.png`](prototype/case2-buyer-1.png) | KB07 lượt đầu: "mặc chật" không phải số đo, độ chắc "Thiếu thông tin", xin ảnh tem + số đo |
-| [`case2-buyer-2.png`](prototype/case2-buyer-2.png) | KB07 sau khi khách gửi ảnh: "chưa thấy căn cứ shop giao sai" nhưng **không đóng khiếu nại**; số đo ghi "người mua tự đo, trợ lý chưa xác minh" |
-| [`case2-shop-owner.png`](prototype/case2-shop-owner.png) | KB07 phía người bán: bảng size, ảnh khách gửi, sàn đề nghị shop gửi ảnh đóng gói |
-| [`case2-staff.png`](prototype/case2-staff.png) | KB07 phía trưởng nhóm: bằng chứng hai phía, tóm tắt AI không phán quyết |
-| [`bonus.png`](prototype/bonus.png) | Tab ④ AI thật (`gpt-4.1-mini`): xin SĐT và tin cụt → "Chỉ trả lời, không hành động", **không gọi tool**; panel ngữ cảnh đầy đủ và luật chặn phía server |
+| [`kb02-buyer-2.png`](prototype/kb02-buyer-2.png), [`kb02-staff.png`](prototype/kb02-staff.png) | Bản gốc chưa đánh số của Ảnh #1 và Ảnh #2 |
+| [`kb02-buyer-1.png`](prototype/kb02-buyer-1.png) | KB02 lượt đầu: câu AI nguyên văn ở §3, thẻ đối chiếu, độ chắc "Chưa đủ căn cứ" |
+| [`kb02-shop-owner.png`](prototype/kb02-shop-owner.png) | KB02 phía người bán: thấy lần sửa mô tả 11/11, hạn 48h; ô "Sàn không hiển thị cho shop" (SĐT, địa chỉ, lời lẽ cảm xúc) |
+| [`kb07-buyer-1.png`](prototype/kb07-buyer-1.png) | KB07 lượt đầu: "mặc chật" không phải số đo, độ chắc "Thiếu thông tin", xin ảnh tem + số đo |
+| [`kb07-buyer-2.png`](prototype/kb07-buyer-2.png) | KB07 sau khi khách gửi ảnh: "chưa thấy căn cứ shop giao sai" nhưng **không đóng khiếu nại**; số đo ghi "người mua tự đo, trợ lý chưa xác minh" |
+| [`kb07-shop-owner.png`](prototype/kb07-shop-owner.png) | KB07 phía người bán: bảng size, ảnh khách gửi, sàn đề nghị shop gửi ảnh đóng gói |
+| [`kb07-staff.png`](prototype/kb07-staff.png) | KB07 phía trưởng nhóm: bằng chứng hai phía, tóm tắt AI không phán quyết |
+| [`bonus.png`](prototype/bonus.png) | Tab ④ AI thật: câu ngoài luồng (xin SĐT, tin cụt khi chưa chọn đơn) → "Chỉ trả lời, không hành động", **không gọi tool** |
+
+**Bằng chứng lời gọi AI thật ở quyết định chính (bonus):** [`anh3-bonus.png`](prototype/anh3-bonus.png) — tab ④, model `gpt-4.1-mini-2025-04-14`, ngữ cảnh KB07. Lượt 1 khách kêu "áo L mặc chật, hoàn tiền" → model trả **Xin thêm bằng chứng** · Chưa đủ căn cứ, không gọi tool. Lượt 2 khách gửi ảnh tem L + số đo nách–nách 53 cm → model trả **Chuyển nhân viên**, tự tính 53×2 = 106 cm nằm trong bảng size L "theo bạn gửi", gọi `chuyen_truong_nhom` (mức Tự làm) và chỉ chuyển sau khi khách bấm xác nhận. Không có API key trong ảnh hay trong mã phía trình duyệt.
+
+![Ảnh #3 — AI thật, KB07: xin bằng chứng → chuyển nhân viên](prototype/anh3-bonus.png)
 
 **Quyết định thiết kế: độ chắc / bằng chứng / điều khiển tự chủ**
 
