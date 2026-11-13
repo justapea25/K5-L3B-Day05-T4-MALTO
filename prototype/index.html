@@ -91,6 +91,13 @@
   .modal h3{margin:0 0 8px}
   .empty{color:var(--muted);font-size:13px}
   .deadline{margin-top:8px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px}
+  .samples{display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px 0;border-top:1px solid var(--line);align-items:center}
+  .samples b{font-size:11px;color:var(--muted);margin-right:2px}
+  .smp{border:1px solid #d6cdf3;background:#f7f4ff;color:var(--hax);border-radius:14px;padding:3px 9px;font-size:12px;cursor:pointer}
+  .smp:hover{background:#ece6ff}
+  .aires{margin-top:8px;padding-top:6px;border-top:1px dashed #d6cdf3}
+  pre.raw{white-space:pre-wrap;word-break:break-word;font-size:11.5px;background:#f6f7f9;border-radius:8px;padding:8px;max-height:320px;overflow:auto}
+  #v-ai .chat .bar{padding:6px 12px}
   textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit;min-height:60px}
 </style>
 </head>
@@ -102,6 +109,7 @@
     <button class="tab on" data-view="buyer">① Người mua</button>
     <button class="tab" data-view="seller">② Người bán <span class="dot hidden" id="dotSeller">!</span></button>
     <button class="tab" data-view="staff">③ Trưởng nhóm <span class="dot hidden" id="dotStaff">!</span></button>
+    <button class="tab" data-view="ai" style="border-color:#c9b8f0">④ AI thật</button>
   </div>
 </header>
 <div class="bar">
@@ -151,14 +159,14 @@
       <div id="evBox" class="empty">—</div>
     </div>
     <div class="card">
-      <span class="hax">G8 / G9 · huỷ, hoàn tác</span>
+      <span class="hax">G9 · rút lại được</span>
       <h3>Việc AI đã làm (theo mức tự chủ)</h3>
       <div class="log" id="log"><div class="empty">Chưa có hành động.</div></div>
     </div>
     <div class="card">
       <h3>Mức tự chủ của từng tool</h3>
       <table class="tools">
-        <tr><td><code>yeu_cau_bang_chung</code></td><td><span class="lv auto">Tự làm · 10s để huỷ trước khi tin đi</span></td></tr>
+        <tr><td><code>yeu_cau_bang_chung</code></td><td><span class="lv auto">Tự làm · chỉ gửi khi đã rõ đơn</span></td></tr>
         <tr><td><code>chuyen_truong_nhom</code></td><td><span class="lv auto">Tự làm sau khi người mua xác nhận · rút lại được</span></td></tr>
         <tr><td><code>soan_hoan_tien</code> <i>(= chuyển tiền thật)</i></td><td><span class="lv review">Trưởng nhóm duyệt</span></td></tr>
         <tr><td><code>tu_choi_khieu_nai</code></td><td><span class="lv review">Trưởng nhóm duyệt · chỉ sau khi shop phản hồi hoặc quá 48h</span></td></tr>
@@ -215,6 +223,45 @@
   </section>
 </main>
 
+<!-- ============ AI THẬT (bonus) ============ -->
+<main id="v-ai" class="hidden">
+  <section class="card chat" style="border-color:#c9b8f0">
+    <span class="hax">Bonus · lời gọi AI thật</span>
+    <div class="chat-head">
+      <strong>🔌 Chat với model thật</strong>
+      <span class="ai-badge" id="aiStatus">đang kiểm tra…</span>
+      <button class="human" id="aiReset">Xoá hội thoại</button>
+    </div>
+    <div class="bar" style="border-bottom:1px solid var(--line)"><b>Ngữ cảnh đơn:</b><span id="aiCtxBtns"></span></div>
+    <div class="msgs" id="aiMsgs"></div>
+    <div class="samples" id="samplesAI"></div>
+    <div class="composer">
+      <input id="aiInp" placeholder="Nhập tin nhắn khách rồi Enter…">
+      <button id="aiSend" style="background:var(--hax)">Gửi</button>
+    </div>
+  </section>
+  <section class="stack">
+    <div class="card">
+      <h3>Ngữ cảnh đầy đủ gửi cho model</h3>
+      <div id="aiCtxView"></div>
+    </div>
+    <div class="card">
+      <h3>Luật chặn phía server (chạy sau model)</h3>
+      <ul class="r">
+        <li>Model chỉ có 2 tool: <code>yeu_cau_bang_chung</code> (gửi shop), <code>chuyen_truong_nhom</code>. Tool chuyển tiền và phạt shop <b>không tồn tại</b> trong schema.</li>
+        <li>Chưa xác định đơn → chặn mọi tool.</li>
+        <li>"Chỉ trả lời" / "Hướng dẫn gửi yêu cầu" → chặn mọi tool.</li>
+        <li><code>chuyen_truong_nhom</code> chỉ khi quyết định là chuyển nhân viên, và chờ khách bấm xác nhận.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Xem thô (cho người chấm)</h3>
+      <details><summary>Request gần nhất gửi lên server</summary><pre id="aiRaw" class="raw">—</pre></details>
+      <details><summary>System prompt + schema</summary><pre id="aiPrompt" class="raw">—</pre></details>
+    </div>
+  </section>
+</main>
+
 <div id="modalRoot"></div>
 
 <script>
@@ -263,8 +310,8 @@ function openOrder(k){
 }
 function askSeller(what){
   if(S.log.some(x=>x.name==="yeu_cau_bang_chung"&&x.status!=="cancel")) return;
-  tool("yeu_cau_bang_chung",`Gửi shop mẫu xin bằng chứng: ${what} — hạn 48h`,"auto",{undoSeconds:10,
-    onCommit:()=>{S.sellerCase={what};sys("Tin xin bằng chứng đã tới shop. Hạn phản hồi 48h.");},onUndo:()=>{S.sellerCase=null}});
+  tool("yeu_cau_bang_chung",`Gửi shop mẫu xin bằng chứng: ${what} — hạn 48h`,"auto",{
+    onCommit:()=>{S.sellerCase={what};sys("Tin xin bằng chứng đã tới shop. Hạn phản hồi 48h.");}});
 }
 function confirmTransfer(note,after){
   modal("Chuyển nhân viên xem xét?",
@@ -302,7 +349,7 @@ function KB02_ev(){
   S.rows[2]={lb:"Mô tả lúc đặt",v:"<b>Xanh navy</b> (theo ảnh bạn gửi)",src:"ảnh của người mua — sàn chưa xác minh",c:"warn"};
   askSeller("bản mô tả lúc đặt và lý do sửa mô tả ngày 11/11");
   ai(`Mình đã nhận 2 ảnh và thêm vào hồ sơ. Ảnh xác nhận đơn của bạn ghi <b>Xanh navy</b> — mình ghi là "theo ảnh bạn gửi", vì mình không tự xác minh được ảnh.<br><br>
-Shop sẽ được báo trong giây lát và có <b>48 giờ</b> để phản hồi. Bạn có muốn mình chuyển hồ sơ cho nhân viên xem xét luôn không?`,
+Shop đã được báo và có <b>48 giờ</b> để phản hồi. Bạn có muốn mình chuyển hồ sơ cho nhân viên xem xét luôn không?`,
     [["Chuyển nhân viên xem xét",KB02_transfer],["Mình gửi nhầm ảnh",()=>{S.buyerEv=S.buyerEv.map(x=>[x[0],false]);S.rows[2]={lb:"Mô tả lúc đặt",v:"<b>Chưa xác minh</b>",src:"đã gỡ ảnh",c:"unk"};sys("Đã gỡ 2 ảnh khỏi hồ sơ. Bạn gửi lại khi sẵn sàng.");}],["Xem bên người bán",()=>go("seller")]],"G9 · sửa được");
 }
 function KB02_transfer(){
@@ -536,7 +583,7 @@ function render(){
       `<button class="btn" onclick="sellerRespond('ev')">Gửi bằng chứng / phản hồi</button><button class="btn ghost" onclick="sellerRespond('agree')">Đồng ý trả hàng hoàn tiền</button>`}</div>`;
     $("#sellerDeadline").className="";
     $("#sellerDeadline").innerHTML=S.sellerResponded?'<span class="ok">Đã phản hồi trong hạn.</span>':S.deadlineOver?'<span class="no"><b>Đã quá hạn</b> — hồ sơ vẫn do trưởng nhóm quyết.</span>':'<div class="countdown">47:59:12</div><div class="empty">đến 15/11 14:00</div>';
-  } else { $("#sellerBox").className="empty"; $("#sellerBox").innerHTML="Chưa có khiếu nại nào cần shop phản hồi.<br>(KB02, KB07: sàn gửi yêu cầu cho shop sau khi người mua gửi bằng chứng hoặc xác nhận chuyển nhân viên — tin đi sau 10s.)"; $("#sellerDeadline").innerHTML="—"; }
+  } else { $("#sellerBox").className="empty"; $("#sellerBox").innerHTML="Chưa có khiếu nại nào cần shop phản hồi.<br>(KB02, KB07: sàn gửi yêu cầu cho shop sau khi người mua gửi bằng chứng hoặc xác nhận chuyển nhân viên.)"; $("#sellerDeadline").innerHTML="—"; }
   // trưởng nhóm
   $("#dotStaff").classList.toggle("hidden",!(S.staffCase&&!S.closed));
   if(S.staffCase&&o){
@@ -556,10 +603,109 @@ function render(){
   } else { $("#staffBox").className="empty"; $("#staffBox").innerHTML="Chưa có hồ sơ chờ duyệt."; }
 }
 
+/* ======================= AI THẬT (bonus) ======================= */
+const AI_ON = location.protocol.startsWith("http");
+const DECISION = {huong_dan_gui_yeu_cau:"Hướng dẫn gửi yêu cầu",xin_them_bang_chung:"Xin thêm bằng chứng",chuyen_nhan_vien:"Chuyển nhân viên",tra_loi_khong_hanh_dong:"Chỉ trả lời, không hành động"};
+const CONF = {thieu_thong_tin:["Thiếu thông tin","c0"],chua_du_can_cu:["Chưa đủ căn cứ","c1"],du_can_cu_de_chuyen_duyet:["Đủ căn cứ để chuyển duyệt","c2"]};
+const TOOL_TO = {yeu_cau_bang_chung:"gửi shop",chuyen_truong_nhom:"gửi trưởng nhóm"};
+const QUYEN_DOC = "Trợ lý đọc được: thông tin đơn, chat đơn, trang sản phẩm hiện tại + ngày cập nhật. KHÔNG có bản lưu mô tả lúc đặt. KHÔNG xác minh được ảnh.";
+const AI_CTX = {
+  none:{label:"Chưa chọn đơn", photo:null, data:{don:null,
+    don_gan_day:["#DH002 · Áo khoác gió · Xanh navy · nhận 12/11","#DH007 · Áo polo đen · Size L · nhận 11/11","#DH001 · Áo thun basic · Size L · nhận 11/11"]}},
+  KB02:{label:"KB02 · Áo navy → đỏ", photo:'📷 ao_nhan_duoc.jpg — áo màu đỏ · 📷 xac_nhan_don_0911.png — "Màu: Xanh navy"', data:{
+    don:{ma:"#DH002",san_pham:"Áo khoác gió",bien_the_da_chon:"Xanh navy",gia:"420.000đ",ngay_dat:"09/11",ngay_nhan:"12/11",han_tra_hang:"19/11",hom_nay:"13/11"},
+    mo_ta_hien_tai:{noi_dung:"Màu đỏ",cap_nhat:"11/11 — SAU ngày đặt"}, mo_ta_luc_dat:"Không có bản lưu — chưa xác minh",
+    chat_don:[], phan_hoi_cua_shop:"Chưa có"}},
+  KB07:{label:"KB07 · Áo L mặc chật", photo:"📷 tem_ao.jpg — L · 📷 do_nach_nach.jpg — 53 cm", data:{
+    don:{ma:"#DH007",san_pham:"Áo polo đen",bien_the_da_chon:"Size L",gia:"280.000đ",ngay_dat:"08/11",ngay_nhan:"11/11",han_tra_hang:"18/11",hom_nay:"13/11"},
+    bang_size_luc_mua:"L = vòng ngực 104–108 cm (trang không sửa sau ngày đặt)",
+    chat_don:[], phan_hoi_cua_shop:"Chưa có"}},
+  KB01:{label:"KB01 · Shop đã nhận lỗi", photo:"📷 tem_size_M.jpg — M", data:{
+    don:{ma:"#DH001",san_pham:"Áo thun basic",bien_the_da_chon:"Size L",gia:"189.000đ",ngay_dat:"08/11",ngay_nhan:"11/11",han_tra_hang:"18/11",hom_nay:"13/11"},
+    chat_don:["Shop (11/11): Bên em gửi nhầm size M ạ, chị thông cảm"], phan_hoi_cua_shop:"Đã xác nhận gửi nhầm trong chat đơn"}}
+};
+const SAMPLES=[
+  ["Tin cụt","hàng sai rồi, xử lý đi"],
+  ["Shop nhận lỗi","Mình đặt size L mà nhận size M, shop cũng nhắn là gửi nhầm rồi"],
+  ["Doạ bóc phốt","Không hoàn tiền ngay là tôi bóc phốt shop!"],
+  ["Hàng giả · khoá shop","Shop bán hàng giả, khoá shop đi!"],
+  ["Xin SĐT shop","Cho tôi số điện thoại của shop"],
+  ["Hỏi hạn","còn mấy ngày để trả hàng?"],
+];
+const AI = {ctx:"none", turns:[], busy:false};
+const aiContext = () => ({...AI_CTX[AI.ctx].data, chinh_sach:POLICY, quyen_doc:QUYEN_DOC});
+function aiHistory(){
+  return AI.turns.filter(t=>!t.error).map(t=>{
+    if(t.role==="user") return {role:"user",content:t.text};
+    const done=t.out.tool_calls.filter(x=>x.status!=="cho").map(x=>`${x.ten} (${x.status==="huy"?"khách không đồng ý":"đã thực hiện"})`);
+    const wait=t.out.tool_calls.filter(x=>x.status==="cho").map(x=>`${x.ten} (đang chờ khách xác nhận)`);
+    return {role:"assistant",content:t.out.cau_tra_loi+(done.length||wait.length?`\n[Hệ thống: ${done.concat(wait).join("; ")}]`:"")};
+  });
+}
+function kvHtml(obj){
+  return `<div class="kv">${Object.entries(obj).map(([k,v])=>`<span>${esc(k)}</span><span>${
+    v===null?'<i class="empty">không có</i>':Array.isArray(v)?(v.length?v.map(x=>esc(String(x))).join("<br>"):'<i class="empty">trống</i>'):
+    typeof v==="object"?Object.entries(v).map(([a,b])=>`${esc(a)}: <b>${esc(String(b))}</b>`).join("<br>"):esc(String(v))}</span>`).join("")}</div>`;
+}
+function renderAI(){
+  $("#aiCtxBtns").innerHTML=Object.entries(AI_CTX).map(([k,c])=>`<button class="sc ${AI.ctx===k?"on":""}" onclick="setAICtx('${k}')">${c.label}</button>`).join(" ");
+  $("#aiCtxView").innerHTML=kvHtml(aiContext());
+  const box=$("#aiMsgs");
+  box.innerHTML=AI.turns.length?"":`<div class="m sys">Chọn ngữ cảnh đơn ở trên, rồi bấm câu mẫu hoặc tự gõ.<br>Mỗi lượt gửi <b>toàn bộ lịch sử</b> + ngữ cảnh cho model thật.</div>`;
+  AI.turns.forEach((t,i)=>{
+    const d=document.createElement("div");
+    if(t.role==="user"){ d.className="m user"; d.textContent=t.text; }
+    else if(t.error){ d.className="m sys"; d.innerHTML=`<span class="no">Lỗi: ${esc(t.error)}</span>`; }
+    else{
+      const a=t.out, c=CONF[a.do_chac]||[a.do_chac,"c1"];
+      d.className="m ai"; d.style.maxWidth="94%";
+      d.innerHTML=`<div class="who">AI thật · ${esc(t.model||"")}</div>${esc(a.cau_tra_loi)}
+        <div class="aires"><span class="lv read">${DECISION[a.quyet_dinh]||esc(a.quyet_dinh)}</span> <span class="status ${c[1]}" style="display:inline-block;margin:0;padding:1px 7px;font-size:11px">${c[0]}</span>
+        ${a.tool_calls.length?a.tool_calls.map((x,j)=>`<div class="le" style="margin-top:6px;background:#fff">${'<span class="lv auto">Tự làm</span>'}<div><code>${x.ten}</code> → ${TOOL_TO[x.ten]}<br><span class="empty">${esc(x.noi_dung)}</span></div><div class="act">${
+          x.status==="cho"?`<button onclick="aiTool(${i},${j},true)">Khách xác nhận</button><button onclick="aiTool(${i},${j},false)">Không</button>`:
+          x.status==="huy"?'<span class="empty">khách không đồng ý</span>':`<span class="ok">✔ ${x.ten==="chuyen_truong_nhom"?"đã chuyển":"đã gửi"} (mô phỏng)</span>`}</div></div>`).join(""):'<div class="empty" style="font-size:12px;margin-top:4px">Không gọi tool.</div>'}
+        ${a.chan.length?`<div class="ignored">🛡 ${a.chan.map(esc).join("<br>🛡 ")}</div>`:""}
+        <details style="margin-top:4px;font-size:12px"><summary>Lý do · còn thiếu</summary><ul class="r">${a.ly_do.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>${a.con_thieu.length?`<div class="no">Còn thiếu: ${a.con_thieu.map(esc).join("; ")}</div>`:""}</details></div>`;
+    }
+    box.appendChild(d);
+  });
+  if(AI.busy){ const d=document.createElement("div"); d.className="m sys"; d.textContent="AI đang trả lời…"; box.appendChild(d); }
+  box.scrollTop=box.scrollHeight;
+  const sm=$("#samplesAI"); sm.innerHTML="<b>Câu mẫu:</b>";
+  const chips=[...SAMPLES]; if(AI_CTX[AI.ctx].photo) chips.unshift(["📷 Gửi ảnh",AI_CTX[AI.ctx].photo]);
+  chips.forEach(([l,t])=>{ const b=document.createElement("button"); b.className="smp"; b.textContent=l; b.title=t; b.onclick=()=>aiSend(t); sm.appendChild(b); });
+  $("#aiSend").disabled=AI.busy||!AI_ON;
+}
+function setAICtx(k){ AI.ctx=k; AI.turns=[]; renderAI(); }
+function aiTool(i,j,ok){ AI.turns[i].out.tool_calls[j].status=ok?"xong":"huy"; renderAI(); }
+async function aiSend(text){
+  text=(text||"").trim(); if(!text||AI.busy) return;
+  if(!AI_ON){ alert("Chạy node prototype/server.mjs rồi mở http://localhost:5173"); return; }
+  AI.turns.push({role:"user",text}); AI.busy=true; renderAI();
+  const payload={history:aiHistory(),context:aiContext()};
+  $("#aiRaw").textContent=JSON.stringify(payload,null,2);
+  try{
+    const r=await fetch("/api/triage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    const j=await r.json(); if(!r.ok) throw new Error(j.error||("HTTP "+r.status));
+    j.output.tool_calls.forEach(x=>x.status=x.ten==="chuyen_truong_nhom"?"cho":"xong");
+    AI.turns.push({role:"assistant",out:j.output,model:j.model});
+  }catch(e){ AI.turns.push({role:"assistant",error:String(e.message||e)}); }
+  AI.busy=false; renderAI();
+}
+async function checkAI(){
+  if(!AI_ON){ $("#aiStatus").textContent="Đang mở file trực tiếp — chạy server để bật"; renderAI(); return; }
+  try{
+    const j=await (await fetch("/api/status")).json(); $("#aiStatus").textContent=j.ready?`Sẵn sàng · ${j.model}`:"Chưa có OPENAI_API_KEY";
+    const p=await (await fetch("/api/prompt")).json(); $("#aiPrompt").textContent=p.system+"\n\n— SCHEMA —\n"+JSON.stringify(p.schema,null,2);
+  }catch{ $("#aiStatus").textContent="Không kết nối được server"; }
+  renderAI();
+}
+
 /* ======================= WIRING ======================= */
 function go(v){
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.view===v));
-  ["buyer","seller","staff"].forEach(x=>$("#v-"+x).classList.toggle("hidden",x!==v));
+  ["buyer","seller","staff","ai"].forEach(x=>$("#v-"+x).classList.toggle("hidden",x!==v));
+  if(v==="ai") renderAI();
 }
 function start(k){
   if(S) S.timers.forEach(clearInterval); reset();
@@ -573,7 +719,10 @@ $("#inp").onkeydown=e=>{if(e.key==="Enter") $("#send").click();};
 $("#btnHuman").onclick=()=>human();
 $("#haxToggle").onchange=e=>document.body.classList.toggle("show-hax",e.target.checked);
 $("#btnTimeout").onclick=()=>{ if(!S.staffCase){alert("Chưa có hồ sơ. Chạy KB02 hoặc KB07 và chuyển nhân viên trước.");return;} S.deadlineOver=true; sys("⏱ Hết 48h, shop chưa phản hồi → hồ sơ vẫn chờ trưởng nhóm quyết (không tự hoàn, không tự từ chối)."); render(); };
-reset(); render();
+$("#aiSend").onclick=()=>{const v=$("#aiInp").value; $("#aiInp").value=""; aiSend(v);};
+$("#aiInp").onkeydown=e=>{if(e.key==="Enter") $("#aiSend").click();};
+$("#aiReset").onclick=()=>{AI.turns=[]; renderAI();};
+reset(); render(); checkAI();
 </script>
 </body>
 </html>

@@ -220,3 +220,4 @@ __marimo__/
 .streamlit/secrets.toml
 playground/
 .DS_Store
+ai-log.jsonl
