@@ -194,7 +194,7 @@
 
 | | |
 |---|---|
-| **Người mua thấy gì** | Trạng thái "Đang xác minh — Chưa đủ căn cứ kết luận". Bảng đối chiếu: **Size đặt hàng:** L · **Size trên tem:** L · **Bảng size lúc mua:** 104–108 cm · **Kích thước thực tế:** chưa xác minh. Phía dưới có nhãn "Chưa có quyết định hoàn tiền" và các nút "Bổ sung bằng chứng", "Sửa thông tin", "Chuyển nhân viên". |
+| **Người mua thấy gì** | Thẻ đối chiếu: **Bạn đặt:** Size L (theo đơn) · **Bảng size lúc mua:** L = 104–108 cm · **Tem trên áo:** chưa có → L "theo ảnh bạn gửi" · **Số đo thực tế:** chưa xác minh → ~106 cm "người mua tự đo, trợ lý chưa xác minh từ ảnh". Nhãn trạng thái: "Thiếu thông tin. Hồ sơ không bị đóng." → sau khi gửi ảnh: "Chưa đủ căn cứ cho thấy giao sai. Hồ sơ không bị đóng." Các nút "Gửi ảnh tem + số đo", "Chuyển nhân viên xem xét", "Không phải đơn này". |
 | **Người mua làm gì tiếp** | Chọn "Bổ sung bằng chứng", đính ảnh đo vòng ngực áo bằng thước dây hoặc thông tin chứng minh sai lệch kích thước; có thể kiểm tra, sửa hoặc huỷ trước khi gửi. Không đồng ý với đánh giá sơ bộ thì chọn "Chuyển nhân viên". AI chỉ ghi nhận bằng chứng, không tự xác nhận ảnh là chính xác và không tự hoàn tiền. |
 | **Người bán thấy gì** | Khi khiếu nại chính thức được ghi nhận: mã đơn #DH007, nội dung khiếu nại, size đặt hàng, bằng chứng liên quan và trạng thái "Chờ phản hồi". Người bán có thể bổ sung bảng size lúc mua, ảnh sản phẩm hoặc giải trình về kích thước. Không hiển thị số điện thoại, địa chỉ hay thông tin riêng tư không cần thiết của người mua. Người bán được phản hồi trước khi có quyết định ảnh hưởng đến tiền hàng. |
 | **Ai được báo & khi nào** | **Người mua:** ngay sau khi hệ thống ghi nhận yêu cầu hoặc bằng chứng thành công. **Người bán:** khi hồ sơ khiếu nại chính thức được mở, hạn phản hồi giả lập 48 giờ. **Trưởng nhóm:** chỉ nhận hồ sơ khi `chuyen_truong_nhom` thực hiện thành công. Hết hạn mà người bán chưa phản hồi: hồ sơ được đánh dấu cần xem xét tiếp, không tự động kết luận người bán sai. *Thông báo cho người bán là chức năng giao diện/quy trình giả lập, không phải tool có sẵn trong đề.* |
@@ -378,7 +378,6 @@
 | [`kb07-buyer-2.png`](prototype/kb07-buyer-2.png) | KB07 sau khi khách gửi ảnh: "chưa thấy căn cứ shop giao sai" nhưng **không đóng khiếu nại**; số đo ghi "người mua tự đo, trợ lý chưa xác minh" |
 | [`kb07-shop-owner.png`](prototype/kb07-shop-owner.png) | KB07 phía người bán: bảng size, ảnh khách gửi, sàn đề nghị shop gửi ảnh đóng gói |
 | [`kb07-staff.png`](prototype/kb07-staff.png) | KB07 phía trưởng nhóm: bằng chứng hai phía, tóm tắt AI không phán quyết |
-| [`bonus.png`](prototype/bonus.png) | Tab ④ AI thật: câu ngoài luồng (xin SĐT, tin cụt khi chưa chọn đơn) → "Chỉ trả lời, không hành động", **không gọi tool** |
 
 **Bằng chứng lời gọi AI thật ở quyết định chính (bonus):** [`anh3-bonus.png`](prototype/anh3-bonus.png) — tab ④, model `gpt-4.1-mini-2025-04-14`, ngữ cảnh KB07. Lượt 1 khách kêu "áo L mặc chật, hoàn tiền" → model trả **Xin thêm bằng chứng** · Chưa đủ căn cứ, không gọi tool. Lượt 2 khách gửi ảnh tem L + số đo nách–nách 53 cm → model trả **Chuyển nhân viên**, tự tính 53×2 = 106 cm nằm trong bảng size L "theo bạn gửi", gọi `chuyen_truong_nhom` (mức Tự làm) và chỉ chuyển sau khi khách bấm xác nhận. Không có API key trong ảnh hay trong mã phía trình duyệt.
 
