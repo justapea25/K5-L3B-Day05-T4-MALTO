@@ -19,9 +19,10 @@ spec.md                 bài nộp §1–§7
 prototype/
 ├── index.html          prototype (HTML/CSS/JS một file)
 ├── server.mjs          server nhỏ cho tab ④ AI thật (bonus)
-├── anh1-…-danhso.png   Ảnh #1 có đánh số ①–⑦ (tab Người mua, KB02)
-├── anh2-…-danhso.png   Ảnh #2 có đánh số ⑧–⑫ (tab Trưởng nhóm, KB02)
-├── anh3-bonus.png      bằng chứng lời gọi AI thật (KB07)
+├── anh1-…-danhso.png   Ảnh #1 có đánh số ①–⑧ (tab Người mua, KB02)
+├── anh2-…-danhso.png   Ảnh #2 có đánh số ⑨–⑭ (tab Trưởng nhóm, KB02)
+├── anh3-…-danhso.png   Ảnh #3 có đánh số ⑮ (hộp xác nhận chuyển nhân viên, KB02)
+├── anh4-bonus-ai-that.png  bằng chứng lời gọi AI thật (KB07)
 └── kb02-*, kb07-*      ảnh phụ từng màn hình
 ```
 

@@ -331,10 +331,9 @@ function KB02(skip){
     {lb:"Bạn đặt",v:"<b>Xanh navy</b>",src:"theo đơn #DH002, 09/11",c:"ok"},
     {lb:"Mô tả hiện tại",v:"<b>Màu đỏ</b>",src:"⚠ trang sản phẩm cập nhật 11/11 — SAU ngày bạn đặt",c:"warn"},
     {lb:"Mô tả lúc đặt",v:"<b>Chưa xác minh</b>",src:"trợ lý không có bản lưu mô tả lúc đặt",c:"unk"}];
-  S.status={c:1,t:"Chưa đủ căn cứ để xử lý. Hồ sơ không bị đóng."};
-  S.conf=1; S.confReasons=["Đơn ghi bạn chọn <b>xanh navy</b>; trang sản phẩm hiện ghi <b>đỏ</b> và được sửa <b>sau</b> ngày đặt.",
-    "Trợ lý không có bản mô tả lúc đặt → <b>không</b> dùng mô tả hiện tại làm căn cứ cho shop.",
-    "Chưa có ảnh hàng nhận được, chưa có phản hồi của shop."];
+  S.confBase=["Đơn ghi bạn chọn <b>xanh navy</b>; trang sản phẩm hiện ghi <b>đỏ</b> và được sửa <b>sau</b> ngày đặt.",
+    "Trợ lý không có bản mô tả lúc đặt → <b>không</b> dùng mô tả hiện tại làm căn cứ cho shop."];
+  S.confLow={c:1,t:"Chưa đủ căn cứ để xử lý."}; S.confMid="Chưa đủ căn cứ để xử lý.";
   S.buyerEv=[["Ảnh chiếc áo nhận được",false],["Ảnh chụp trang sản phẩm / xác nhận đơn lúc đặt (nếu còn)",false]];
   S.sellerEv=[["Bản mô tả lúc đặt / lý do sửa mô tả 11/11",false]];
   ai(`Mình đã mở đơn #DH002 của bạn. Bạn đặt áo <b>xanh navy</b> (09/11) và nhận được áo <b>màu đỏ</b> (12/11).<br><br>
@@ -372,10 +371,10 @@ function KB07(skip){
     {lb:"Bảng size lúc mua",v:"L = vòng ngực <b>104–108 cm</b>",src:"trang sản phẩm, không sửa sau ngày đặt",c:"ok"},
     {lb:"Tem trên áo",v:"<b>Chưa có</b>",src:"cần ảnh của bạn",c:"unk"},
     {lb:"Số đo thực tế",v:"<b>Chưa xác minh</b>",src:"\"mặc chật\" là cảm nhận, chưa phải số đo",c:"unk"}];
-  S.status={c:0,t:"Thiếu thông tin. Hồ sơ không bị đóng."};
-  S.conf=0; S.confReasons=["Đơn ghi size L. Chưa biết áo nhận được có đúng size L không.",
+  S.confBase=["Đơn ghi size L. Chưa biết áo nhận được có đúng size L không.",
     "\"Mặc chật\" có thể do form áo hoặc số đo người mặc → <b>không</b> dùng làm căn cứ shop giao sai.",
     "Cũng chưa đủ để nói shop đúng → <b>không</b> từ chối."];
+  S.confLow={c:0,t:"Thiếu thông tin."}; S.confMid="Chưa đủ căn cứ cho thấy giao sai.";
   S.buyerEv=[["Ảnh tem size trên áo",false],["Ảnh đo vòng ngực áo (đo nách–nách)",false]];
   S.sellerEv=[["Ảnh đóng gói / tem trước khi giao",false]];
   ai(`Mình đã mở đơn #DH007: áo polo đen <b>size L</b>, 280.000đ, nhận 11/11. Mình là trợ lý AI, <b>không tự hoàn tiền hay đóng khiếu nại</b>.<br><br>
@@ -389,8 +388,7 @@ function KB07_ev(){
   S.buyerEv=[["Ảnh tem size trên áo: L",true],["Ảnh đo nách–nách: 53 cm (→ 106 cm)",true]];
   S.rows[2]={lb:"Tem trên áo",v:"<b>L</b>",src:"theo ảnh bạn gửi",c:"ok"};
   S.rows[3]={lb:"Số đo thực tế",v:"<b>~106 cm</b> — nằm trong 104–108",src:"người mua tự đo, trợ lý chưa xác minh từ ảnh",c:"warn"};
-  S.status={c:1,t:"Chưa đủ căn cứ cho thấy giao sai. Hồ sơ không bị đóng."};
-  S.conf=1; S.confReasons=["Tem ghi L, khớp đơn.","Số đo bạn gửi (~106 cm) nằm trong bảng size L lúc mua — nhưng trợ lý không xác minh được số đo từ ảnh.",
+  S.confBase=["Tem ghi L, khớp đơn.","Số đo bạn gửi (~106 cm) nằm trong bảng size L lúc mua — nhưng trợ lý không xác minh được số đo từ ảnh.",
     "→ Chưa thấy căn cứ shop giao sai. Trợ lý <b>không</b> từ chối thay nhân viên."];
   ai(`Cảm ơn bạn. Tem ghi <b>L</b>, và số đo bạn gửi khoảng <b>106 cm</b> — nằm trong bảng size L lúc mua (104–108 cm). Theo các số liệu này, mình <b>chưa thấy căn cứ</b> cho thấy shop giao sai size. Số đo là bạn tự đo, mình không xác minh được từ ảnh.<br><br>
 Mình <b>không đóng</b> khiếu nại. Bạn có thể:<br>• chuyển nhân viên xem xét (shop có 48h phản hồi), hoặc<br>• nếu bạn chỉ muốn đổi size vừa hơn, nhắn shop qua chat đơn để thoả thuận đổi hàng.`,
@@ -444,7 +442,7 @@ function KB03(){
 }
 function pick(k){
   const o=ORDERS[k]; user(`${o.item} ${o.id}`); openOrder(k);
-  S.conf=0; S.confReasons=["Đã biết đơn. Chưa biết sai ở chỗ nào."];
+  S.confBase=null; S.conf=0; S.confReasons=["Đã biết đơn. Chưa biết sai ở chỗ nào."];
   S.rows=[{lb:"Bạn đặt",v:`<b>${o.variant}</b>`,src:`theo đơn ${o.id}`,c:"ok"}];
   const label={KB02:"Sai màu",KB07:"Sai size / mặc không vừa",KB01:"Sai size, shop đã nhận lỗi"}[k];
   ai(`Đơn ${o.id} — ${o.item} (${o.variant}). Hàng nhận được <b>khác mô tả ở chỗ nào</b>?`,
@@ -452,7 +450,7 @@ function pick(k){
 }
 function correction(){
   user("Không phải đơn này");
-  S.order=null; S.rows=[]; S.buyerEv=[]; S.sellerEv=[]; S.status={c:0,t:"Đang chọn lại đơn."}; S.conf=0;
+  S.order=null; S.rows=[]; S.buyerEv=[]; S.sellerEv=[]; S.status={c:0,t:"Đang chọn lại đơn."}; S.conf=0; S.confBase=null;
   ai(`Xin lỗi, bạn chọn giúp mình đúng đơn nhé:`,
     [["Áo khoác gió — #DH002",()=>pick("KB02")],["Áo polo đen — #DH007",()=>pick("KB07")],["Áo thun basic — #DH001",()=>pick("KB01")]],"G9 · sửa dễ");
 }
@@ -473,7 +471,7 @@ Mình có thể: ghi nhận nghi vấn kèm ảnh bạn gửi, và — nếu b�
     ai(`Mình hiểu bạn đang rất bực. Hồ sơ được xét theo <b>đơn hàng và bằng chứng của hai bên</b>, không theo mức độ gay gắt của tin nhắn — điều này áp dụng cho cả bạn và shop. ${S.order?"Bạn gửi giúp mình ảnh chỗ sai so với mô tả nhé.":"Bạn đang khiếu nại đơn nào ạ?"}`,
       S.order?null:[["Chọn đơn",KB03]],"Rubric #4 · trung lập");
   } else if(/(lít|lit|dung tích|nồi)/.test(s)){                                                     // KB04
-    S.conf=1; S.confReasons=["Không có tiêu chuẩn đo dung tích trong dữ liệu → trợ lý không tự kết luận quảng cáo sai."];
+    S.confBase=null; S.conf=1; S.confReasons=["Không có tiêu chuẩn đo dung tích trong dữ liệu → trợ lý không tự kết luận quảng cáo sai."];
     ai(`Mình chưa đủ căn cứ để nói shop quảng cáo sai: dung tích ghi trên mô tả có thể là dung tích danh định, khác cách đo lòng nồi. Bạn gửi giúp: ảnh nhãn thông số trên nồi và cách bạn đo (ví dụ clip đổ nước bằng ca đong). Shop sẽ được hỏi giải trình trước khi có quyết định.`,
       [["Chuyển nhân viên",human]],"G10 · trả lời kèm giới hạn");
   } else if(/(hoàn ngay|hoan ngay|hoàn luôn|hoàn tiền ngay|refund)/.test(s)){
@@ -510,34 +508,67 @@ function modal(title,body,okLabel,okClass,onOk,needReason,noLabel){
   $("#mOk").onclick=()=>{ if(needReason && !$("#reason").value.trim()){$("#reason").style.borderColor="red";return;}
     const r=needReason?$("#reason").value.trim():""; $("#modalRoot").innerHTML=""; onOk(r); };
 }
+function closeConf(kind){ // ca không có confBase (KB01, ca lạ): vẫn không để panel đứng ở trạng thái cũ
+  if(S.confBase) return;
+  S.conf=2; S.status={c:2,t:kind==="refund"?"Đã xử lý: nhân viên duyệt hoàn tiền.":"Đã xử lý: nhân viên từ chối kèm lý do. Gửi bằng chứng mới để mở lại."};
+  S.confReasons=[...S.confReasons,`<b>Nhân viên đã quyết: ${kind==="refund"?"hoàn tiền":"từ chối"}</b> — quyết định của người, không phải của trợ lý.`];
+}
 function staffRefund(){
   const o=S.order;
   modal("Duyệt hoàn tiền?",`Gọi <code>soan_hoan_tien</code>: hoàn <b>${o.price}</b> cho người mua, đơn ${o.id}.<br><span class="no">Tiền đã về người mua thì rất khó lấy lại.</span>`,"Xác nhận hoàn","green",()=>{
-    S.closed="refund"; tool("soan_hoan_tien",`Trưởng nhóm duyệt hoàn ${o.price}`,"review");
+    S.closed="refund"; closeConf("refund"); tool("soan_hoan_tien",`Trưởng nhóm duyệt hoàn ${o.price}`,"review");
     go("buyer"); sys("Trưởng nhóm đã xử lý hồ sơ.");
     ai(`Yêu cầu của bạn đã được <b>nhân viên duyệt</b>: hoàn ${o.price}. Mã gửi trả hàng: <b>TRA-7781</b> (mang ra bưu cục trong 3 ngày).`,null);
   });
 }
 function staffReject(){
   modal("Từ chối khiếu nại?","Gọi <code>tu_choi_khieu_nai</code>: tiền về shop, hồ sơ đóng. Người mua nhận lý do bạn ghi dưới đây và có thể khiếu nại lại kèm bằng chứng mới.","Từ chối","red",(r)=>{
-    S.closed="reject"; tool("tu_choi_khieu_nai",`Trưởng nhóm từ chối: "${esc(r)}"`,"review");
+    S.closed="reject"; closeConf("reject"); tool("tu_choi_khieu_nai",`Trưởng nhóm từ chối: "${esc(r)}"`,"review");
     go("buyer"); sys("Trưởng nhóm đã xử lý hồ sơ.");
     ai(`Nhân viên đã xem hồ sơ của cả hai bên và <b>chưa chấp nhận</b> yêu cầu trả hàng. Lý do: "${esc(r)}".<br>Nếu bạn có bằng chứng mới, gửi ở đây để mở lại hồ sơ.`,[["Gửi bằng chứng mới",()=>$("#inp").focus()],["Gặp nhân viên",human]],"G15 · giải thích + đường lui");
   },true);
 }
 function staffSpecialist(){ tool("chuyen_truong_nhom","Trưởng nhóm điều phối sang bộ phận chuyên trách","auto"); sys("Trưởng nhóm đã điều phối hồ sơ sang bộ phận chuyên trách."); }
 
+/* Panel độ chắc đi theo hồ sơ thật (bằng chứng hai bên, shop đã phản hồi chưa, nhân viên đã quyết chưa)
+   — không đứng yên ở trạng thái lượt đầu khi chat đã đi tiếp. */
+function syncConf(){
+  if(!S.confBase) return;
+  const r=[...S.confBase];
+  const buyerOk=S.buyerEv.length>0&&S.buyerEv.every(x=>x[1]);
+  r.push(buyerOk?`Đã có ${S.buyerEv.length} ảnh của bạn — ghi "theo ảnh bạn gửi", sàn chưa xác minh.`
+    :`Còn thiếu: ${S.buyerEv.filter(x=>!x[1]).map(x=>x[0].toLowerCase()).join("; ")}.`);
+  r.push(S.sellerResponded?`Shop đã phản hồi: ${S.sellerEv.filter(x=>x[1]).map(x=>x[0].replace(/^Shop:\s*/,"")).join("; ")}.`
+    :S.deadlineOver?"Shop quá hạn 48h chưa phản hồi — không tự xử shop thua, nhân viên quyết."
+    :S.sellerCase?"Đang chờ shop phản hồi (hạn 48h).":"Shop chưa được hỏi.");
+  const heard=S.sellerResponded||S.deadlineOver;
+  if(S.closed){
+    r.push(`<b>Nhân viên đã quyết: ${S.closed==="refund"?"hoàn tiền":"từ chối"}</b> — quyết định của người, không phải của trợ lý.`);
+    S.conf=2; S.status={c:2,t:S.closed==="refund"?"Đã xử lý: nhân viên duyệt hoàn tiền.":"Đã xử lý: nhân viên từ chối kèm lý do. Gửi bằng chứng mới để mở lại."};
+  } else if(buyerOk&&heard){
+    S.conf=2; S.status={c:2,t:"Đủ căn cứ để chuyển duyệt — nhân viên quyết. Hồ sơ không bị đóng."};
+  } else if(buyerOk){
+    S.conf=1; S.status={c:1,t:`${S.confMid}${S.sellerCase?" Shop đang có 48h để phản hồi.":""} Hồ sơ không bị đóng.`};
+  } else {
+    S.conf=S.confLow.c; S.status={c:S.confLow.c,t:`${S.confLow.t} Hồ sơ không bị đóng.`};
+  }
+  S.confReasons=r;
+}
+
 /* ======================= RENDER ======================= */
 const lvBadge=l=>({auto:'<span class="lv auto">Tự làm</span>',read:'<span class="lv read">Chỉ đọc</span>',review:'<span class="lv review">Người duyệt</span>',ban:'<span class="lv ban">CẤM</span>'}[l]);
 const rowsHtml=rows=>`<div class="rows">${rows.map(r=>`<div class="row ${r.c}"><span class="lb">${r.lb}</span><span>${r.v}<span class="st">${r.src}</span></span></div>`).join("")}</div>`;
 const evl=a=>a.length?a.map(([t,v])=>`<div class="${v?'ok':'no'}">${v?'✔':'✘ còn thiếu:'} ${t}</div>`).join(""):'<div class="empty">—</div>';
 function render(){
+  syncConf();
   const box=$("#msgs");
   box.innerHTML=S.msgs.length?"":`<div class="m sys">Chọn một ca ở thanh trên, hoặc gõ tin nhắn để thử ca lạ.<br>Bạn đang trò chuyện với <b>trợ lý AI</b>; luôn có nút <b>Gặp nhân viên</b>.</div>`;
+  // Nút gắn với tin AI/người mua gần nhất — dòng hệ thống ("tin đã tới shop"...) không làm mất nút
+  let chipIdx=-1; for(let i=S.msgs.length-1;i>=0;i--){ if(S.msgs[i].from!=="sys"){ chipIdx=i; break; } }
   S.msgs.forEach((m,i)=>{
     const d=document.createElement("div"); d.className="m "+m.from;
     d.innerHTML=(m.from==="ai"?'<div class="who">Trợ lý AI</div>':"")+m.html+(m.hax?`<span class="hax">${m.hax}</span>`:"");
-    if(m.chips && i===S.msgs.length-1){
+    if(m.chips && i===chipIdx){
       const c=document.createElement("div"); c.className="chips";
       m.chips.forEach(([l,f],j)=>{const b=document.createElement("button");b.className="chip"+(j>0?" sec":"");b.textContent=l;b.onclick=f;c.appendChild(b)});
       d.appendChild(c);
@@ -587,7 +618,7 @@ function render(){
   // trưởng nhóm
   $("#dotStaff").classList.toggle("hidden",!(S.staffCase&&!S.closed));
   if(S.staffCase&&o){
-    const canReject=S.sellerResponded||S.deadlineOver||(S.staffCase.fast);
+    const canReject=S.sellerResponded||S.deadlineOver; // duyệt nhanh cũng không mở "Từ chối" trước khi nghe shop
     $("#staffBox").className="";
     $("#staffBox").innerHTML=`<div class="kv"><span>Đơn</span><span><b>${o.id}</b> · ${o.item} · ${o.price}</span><span>Ưu tiên</span><span>${S.staffCase.fast?'<b class="ok">Duyệt nhanh</b> — shop đã nhận lỗi':'Thường'}</span></div>
      <p style="background:var(--info-bg);padding:8px;border-radius:8px"><b>Trợ lý AI tóm tắt (không phải phán quyết):</b> ${S.staffCase.note}</p>

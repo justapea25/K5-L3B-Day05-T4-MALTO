@@ -45,7 +45,7 @@
 | Mã | Tình huống | Lớp | Nhãn rủi ro |
 |---|---|---|---|
 | KB01 | Shop thừa nhận giao nhầm size, AI hứa đã hoàn | ① | Sửa được |
-| **KB02** | **Shop sửa mô tả sau khi bán** | ④ | **Không chấp nhận được** |
+| **KB02** | **Shop sửa mô tả sau khi bán** | ① + ④ | **Không chấp nhận được** |
 | KB03 | Tin nhắn cụt: "hàng sai rồi" | ② | Sửa được |
 | KB04 | Tranh chấp dung tích nồi chiên 6 lít | ① | Sửa được |
 | KB05 | Khách doạ bóc phốt để ép hoàn ngay | ④ | Không chấp nhận được |
@@ -70,7 +70,7 @@
 | | |
 |---|---|
 | **Tin người dùng** | "Đơn #DH002 tôi đặt áo xanh navy, nhận lại áo đỏ. Giờ shop sửa mô tả thành màu đỏ rồi, sao lại bảo giao đúng?" |
-| **Lớp & nhãn** | ④ · Không chấp nhận được |
+| **Lớp & nhãn** | ① + ④ · Không chấp nhận được. Gốc lỗi là lớp ① (nguồn sự thật: mô tả hiện tại ≠ mô tả lúc đặt); nhãn "không chấp nhận được" đến từ lớp ④ (hậu quả là quyết định tiền khó đảo). |
 | **AI có thể sai thế nào** | AI lấy mô tả HIỆN TẠI (màu đỏ) làm bằng chứng rằng mô tả lúc ĐẶT cũng là đỏ; suy luận shop đúng và gọi `tu_choi_khieu_nai`. Tool này đóng khiếu nại, tiền về người bán, khó đảo ngược; nguồn lịch sử lúc mua không có trong các tool được cấp. |
 | **Sản phẩm tốt nên làm gì** | Tách ba thông tin: khách đặt xanh navy (theo đơn); mô tả hiện tại đỏ; mô tả khi đặt chưa xác minh. Không hoàn hay từ chối khiếu nại. Giải thích thiếu dữ liệu gốc, cho bổ sung bằng chứng hoặc xác nhận chuyển hồ sơ qua `chuyen_truong_nhom`; tạo cơ hội người bán giải trình. |
 | **Bằng chứng đối chiếu** | Fixture KB02: #DH002, áo khoác gió 420.000đ; đặt 09/11/2026 (xanh navy), mô tả đổi 11/11, nhận 12/11 (đỏ). Đây là sự thật do người thiết kế đặt ra, KHÔNG phải dữ liệu AI đã truy xuất. Track T4 > Hard tests "mô tả đã sửa"; Data & fixture > `tu_choi_khieu_nai` và thiếu tool lịch sử. |
@@ -174,9 +174,9 @@
 
 | Nguyên tắc | Câu chữ hoặc vị trí trên màn hình | Vì sao phù hợp |
 |---|---|---|
-| **G11** — Làm rõ vì sao hệ thống làm vậy | Thẻ đối chiếu ba dòng, đặc biệt dòng "Mô tả lúc đặt: chưa xác minh" | Người dùng thấy căn cứ và chỗ thiếu, nên hiểu vì sao AI không kết luận. Khớp với lỗi ngữ cảnh. |
-| **G10** — Thu hẹp phạm vi khi không chắc | Câu "mình sẽ không tự hoàn tiền hay đóng khiếu nại" và nhãn "Hồ sơ không bị đóng" | AI tự giới hạn việc mình làm khi thiếu dữ liệu, tránh gọi `tu_choi_khieu_nai` hoặc `soan_hoan_tien` sai. |
-| **G16** — Cho biết hậu quả hành động của người dùng | Màn hình xác nhận "Hồ sơ gồm… Xác nhận chuyển?" kèm nút Quay lại | Người mua biết bấm là gì và vẫn huỷ được. Hợp với lựa chọn chuyển người có xác nhận. |
+| **G11** — Làm rõ vì sao hệ thống làm vậy | Thẻ đối chiếu ba dòng, đặc biệt dòng "Mô tả lúc đặt: chưa xác minh" (Ảnh #1 ⑤) | Người dùng thấy căn cứ và chỗ thiếu, nên hiểu vì sao AI không kết luận. Khớp với lỗi ngữ cảnh. |
+| **G10** — Thu hẹp phạm vi khi không chắc | Câu "mình sẽ không tự hoàn tiền hay đóng khiếu nại" (nhãn đầu chat, Ảnh #1 ①) và nhãn "Hồ sơ không bị đóng" (Ảnh #1 ⑤) | AI tự giới hạn việc mình làm khi thiếu dữ liệu, tránh gọi `tu_choi_khieu_nai` hoặc `soan_hoan_tien` sai. |
+| **G16** — Cho biết hậu quả hành động của người dùng | Màn hình xác nhận "Hồ sơ gồm… Xác nhận chuyển?" kèm nút Quay lại (Ảnh #3 ⑮) | Người mua biết bấm là gì và vẫn huỷ được. Hợp với lựa chọn chuyển người có xác nhận. |
 
 **Lỗi không thể sửa bằng câu chữ**
 
@@ -199,7 +199,7 @@
 | **Người bán thấy gì** | Khi khiếu nại chính thức được ghi nhận: mã đơn #DH007, nội dung khiếu nại, size đặt hàng, bằng chứng liên quan và trạng thái "Chờ phản hồi". Người bán có thể bổ sung bảng size lúc mua, ảnh sản phẩm hoặc giải trình về kích thước. Không hiển thị số điện thoại, địa chỉ hay thông tin riêng tư không cần thiết của người mua. Người bán được phản hồi trước khi có quyết định ảnh hưởng đến tiền hàng. |
 | **Ai được báo & khi nào** | **Người mua:** ngay sau khi hệ thống ghi nhận yêu cầu hoặc bằng chứng thành công. **Người bán:** khi hồ sơ khiếu nại chính thức được mở, hạn phản hồi giả lập 48 giờ. **Trưởng nhóm:** chỉ nhận hồ sơ khi `chuyen_truong_nhom` thực hiện thành công. Hết hạn mà người bán chưa phản hồi: hồ sơ được đánh dấu cần xem xét tiếp, không tự động kết luận người bán sai. *Thông báo cho người bán là chức năng giao diện/quy trình giả lập, không phải tool có sẵn trong đề.* |
 | **Hạn yêu cầu trả hàng** | Chính sách giả lập: 7 ngày kể từ ngày nhận. Nhận 11/11/2026 → hạn **23:59 ngày 18/11/2026**; tại 13/11 hiển thị "còn 5 ngày". Nếu chưa có yêu cầu chính thức, hiển thị "Chưa gửi yêu cầu trả hàng/hoàn tiền". Bổ sung bằng chứng hoặc chuyển nhân viên **không** đồng nghĩa với đã nộp yêu cầu đúng hạn. |
-| **Loại lỗi & cơ chế sửa** | **Lỗi hệ thống:** AI tin hoàn toàn lời khiếu nại và gọi `soan_hoan_tien` dù chưa xác minh được sai lệch kích thước, gây thiệt hại cho người bán. **Lỗi ngữ cảnh:** AI nhầm "khách mặc chật" với "shop giao sai size" — cảm giác vừa vặn và việc đáp ứng mô tả là hai vấn đề khác nhau.<br>**Cơ chế sửa:** AI nêu rõ dữ liệu đã biết và chưa xác minh, xin bằng chứng phù hợp, cho người bán phản hồi, không tự hoàn tiền hoặc bác khiếu nại, chuyển nhân viên khi tranh chấp chưa giải quyết. |
+| **Loại lỗi & cơ chế sửa** | **Loại lỗi: người dùng (diễn đạt).** Người mua nói một *cảm nhận* ("mặc chật") như một *sự thật* ("shop giao sai size"). Dữ liệu không thiếu, đơn và bảng size đều có; cái thiếu là một con số đo được. Nếu AI tin nguyên câu đó và gọi `soan_hoan_tien` thì lỗi người dùng biến thành **lỗi hệ thống** (AI sai), và người bán đúng chịu thiệt.<br>**Cách nói:** không bảo người mua sai, mà nói "mặc chật có nhiều lý do (form áo, số đo người mặc)", rồi chỉ đúng một phép đo cần làm: nách–nách, AI nhân 2.<br>**Cách sửa:** đổi input chứ không đổi kết luận: nút "Gửi ảnh tem + số đo", và nút "Số đo của mình khác" nếu khách đo lại. Bằng chứng mới vào thẻ đối chiếu với nhãn "người mua tự đo, trợ lý chưa xác minh". Trợ lý không hoàn và cũng không từ chối; vẫn tranh chấp thì chuyển nhân viên. |
 
 **Phân tích lựa chọn phương án UX**
 
@@ -224,6 +224,16 @@
 | **Rủi ro còn lại** | AI không có công cụ xác minh kích thước thực tế hoặc tính xác thực của bằng chứng. Đơn và tem đều ghi L không chứng minh áo đúng bảng size. Dù AI giải thích rõ ràng, nếu hệ thống vẫn cho phép gọi `soan_hoan_tien` khi chưa đủ căn cứ, người bán vẫn có nguy cơ bị hoàn tiền oan. |
 | **Thiết kế xử lý** | Chặn AI tự gọi `soan_hoan_tien` khi kích thước thực tế chưa được xác minh. Lưu bằng chứng và trạng thái kiểm chứng riêng biệt; người mua bổ sung ảnh đo, người bán cung cấp bảng size và phản hồi. Vẫn tranh chấp thì dùng `chuyen_truong_nhom`. Chỉ hoàn tiền sau khi người có thẩm quyền phê duyệt theo §4. Chưa đủ căn cứ thì giữ trạng thái chờ xác minh, không tự động hoàn tiền hoặc từ chối khiếu nại. |
 
+### Loại lỗi quyết định cách nói và cách sửa
+
+Ba loại lỗi khác nhau ở **ai đang thiếu gì**, nên câu chữ và đường sửa cũng khác. Nói nhầm loại sẽ gây hại: đổ cho người dùng một lỗi của hệ thống thì mất niềm tin; nhận lỗi hệ thống cho một ca thiếu dữ liệu thì người dùng tưởng AI sẽ tự sửa được.
+
+| Loại lỗi | Ca trong bài | Ai đang thiếu gì | Cách nói | Cách sửa (trên màn hình) |
+|---|---|---|---|---|
+| **Ngữ cảnh** — dữ liệu thiếu hoặc đã đổi, không do ai trong cuộc chat | KB02: mô tả bị sửa 11/11, trợ lý không có bản lưu lúc đặt | **Hệ thống** thiếu nguồn | Gọi tên chỗ thiếu, không xin lỗi chung chung: *"Mình chưa có bản mô tả lúc bạn đặt nên chưa thể kết luận ai đúng."* | Thẻ đối chiếu ghi "Mô tả lúc đặt: **chưa xác minh**". Xin nguồn thay thế từ **cả hai bên** (ảnh của người mua, bản mô tả của shop). Chặn `tu_choi_khieu_nai` cho tới khi shop phản hồi. |
+| **Người dùng** — diễn đạt thiếu hoặc nhầm | KB07: "mặc chật" được nói thành "giao sai size". KB03: "hàng sai rồi" không nói đơn nào. Nhầm ảnh, nhầm đơn. | **Người dùng** thiếu một thông tin cụ thể | Không bảo người dùng sai. Hỏi **đúng một** thứ: *"Bạn đang muốn khiếu nại đơn hàng nào?"*, *"đo nách–nách khi đặt áo phẳng (mình sẽ nhân 2)"*. | Sửa dễ, không phạt: nút "Không phải đơn này", "Mình gửi nhầm ảnh" (gỡ ảnh, thẻ quay về "chưa xác minh"), "Số đo của mình khác". |
+| **Hệ thống** — AI hoặc tool làm sai | AI đọc nhầm đơn; `chuyen_truong_nhom` hoặc `yeu_cau_bang_chung` không chạy được; AI hứa điều chưa có (KB01 "đã hoàn") | **Trợ lý** sai | Trợ lý nhận lỗi về mình và nói hồ sơ vẫn an toàn: *"Mình chưa chuyển được hồ sơ — lỗi ở phía mình. Hồ sơ của bạn vẫn giữ nguyên, chưa có quyết định tiền nào."* *(Câu thiết kế; prototype chỉ mô phỏng nhánh tool chạy thành công.)* | Chỉ báo "đã chuyển / đã gửi" **sau khi** tool trả kết quả thành công (Ảnh #1 ④). Mỗi hành động tự làm có dòng nhật ký và nút "Rút lại" (Ảnh #1 ⑧). Nút "Gặp nhân viên" luôn còn (Ảnh #1 ②). |
+
 ---
 
 ## §4. Mức tự chủ (chặng 4)
@@ -231,7 +241,7 @@
 > ⚠️ **Tác động thật của tool:** `yeu_cau_bang_chung` gửi yêu cầu; `chuyen_truong_nhom` chuyển hồ sơ; `soan_hoan_tien` **thực sự hoàn tiền**; `tu_choi_khieu_nai` đóng khiếu nại và chuyển tiền cho shop; `phat_shop` có thể phạt/khoá shop. Không suy từ tên "soạn" rằng tool chỉ tạo bản nháp.
 
 **Cách nhóm hiểu ba mức**
-- **Tự làm:** AI gọi tool, không cần ai bấm; luôn có cách huỷ hoặc rút lại.
+- **Tự làm:** AI gọi tool, không cần nhân viên bấm. Điều kiện: **hoặc** rút lại được (`chuyen_truong_nhom` có nút "Rút lại"), **hoặc** không có tiền đi, sai thì rẻ, và rủi ro chính đã bị chặn bằng luật *trước khi* gửi (`yeu_cau_bang_chung`: tin đã tới thì không rút được, nhưng chỉ gửi khi đã rõ đơn — xem Tool 1/5).
 - **Cần người duyệt:** AI chỉ chuẩn bị hồ sơ và tóm tắt; trưởng nhóm là người bấm thực hiện. AI không bao giờ tự gọi tool này.
 - **Cấm:** AI không gọi, không đề xuất, không có nút trên màn hình; chỉ hướng người dùng sang nơi có thẩm quyền.
 
@@ -276,7 +286,7 @@
 
 | | |
 |---|---|
-| **Mức nhóm chọn** | **Cần trưởng nhóm duyệt.** AI không gọi tool này; AI chỉ chuẩn bị hồ sơ. Thêm **hàng duyệt nhanh** khi hệ thống thấy shop đã tự xác nhận lỗi trong chat đơn (KB01). |
+| **Mức nhóm chọn** | **Cần trưởng nhóm duyệt.** AI không gọi tool này; AI chỉ chuẩn bị hồ sơ. Thêm **hàng duyệt nhanh** khi shop đã tự xác nhận lỗi (KB01).<br>**Ai quyết "shop đã nhận lỗi":** không phải AI tự đánh giá. Tín hiệu là (a) shop bấm "Đồng ý trả hàng hoàn tiền" trong màn hình người bán, hoặc (b) một tin của **chính tài khoản shop** trong chat đơn. AI chỉ đính kèm **nguyên văn** tin đó vào hồ sơ và gắn cờ "đề xuất duyệt nhanh"; trưởng nhóm đọc nguyên văn trước khi bấm. Lời kể của người mua ("shop nhận rồi") không bao giờ đủ để vào hàng nhanh. Hàng nhanh chỉ đổi **thứ tự** trong hàng chờ, không bỏ bước duyệt và không mở sớm nút "Từ chối". |
 | **Chi phí nếu sai** | Người bán mất tiền và hàng: KB07 mất 280.000đ dù giao đúng size L. Tạo tiền lệ "cứ doạ là được hoàn" (KB05) — đúng nỗi đau người bán trong track: "khách doạ bóc phốt là sàn hoàn luôn". |
 | **Khả năng đảo ngược** | Khó: tiền đã về người mua, đòi lại phải qua khiếu nại ngược, thường không thành. |
 | **Chi phí nếu chờ người** | Người mua đúng phải chờ: KB01 shop đã nhận lỗi mà vẫn phải đợi nhân viên. Giảm bằng hàng duyệt nhanh. Yêu cầu đã nộp trong hạn nên chờ không làm người mua mất quyền. |
@@ -289,7 +299,7 @@
 
 | | |
 |---|---|
-| **Mức nhóm chọn** | **Cần trưởng nhóm duyệt**, kèm 2 luật: (1) nút chỉ mở khi shop đã phản hồi hoặc đã quá 48h; (2) bắt buộc ghi lý do gửi người mua, và người mua được gửi bằng chứng mới để mở lại. |
+| **Mức nhóm chọn** | **Cần trưởng nhóm duyệt**, kèm 2 luật: (1) nút chỉ mở khi shop đã phản hồi hoặc đã quá 48h, kể cả với hồ sơ ở hàng duyệt nhanh; (2) bắt buộc ghi lý do gửi người mua, và người mua được gửi bằng chứng mới để mở lại. |
 | **Chi phí nếu sai** | Người mua mất tiền và giữ hàng sai: KB02 mất 420.000đ, giữ áo đỏ dù đặt navy — vì AI tin mô tả hiện tại đã bị sửa. |
 | **Khả năng đảo ngược** | Khó: hồ sơ đóng, tiền đã về shop. |
 | **Chi phí nếu chờ người** | Người bán đúng (KB07) chờ tối đa 48h + thời gian duyệt mới nhận tiền. Chấp nhận được: tiền đang được sàn giữ, không mất. |
@@ -337,7 +347,7 @@
 | Lời doạ, cảm nhận ("mặc chật") không phải căn cứ | KB05, KB07 |
 | `yeu_cau_bang_chung` chỉ gửi khi đã xác định đúng đơn | KB03 |
 | `chuyen_truong_nhom` cần người mua xác nhận; chỉ báo "đã chuyển" sau khi thành công | KB06 |
-| Hàng duyệt nhanh khi hệ thống thấy shop đã xác nhận lỗi trong chat đơn | KB01 |
+| Hàng duyệt nhanh chỉ khi tín hiệu đến từ phía shop (nút "Đồng ý trả hàng" hoặc tin của tài khoản shop trong chat đơn, đính nguyên văn); không dựa trên lời kể của người mua hay đánh giá của AI | KB01, KB05 |
 
 ### Một mức tự chủ đã đổi lời hứa nào với người dùng
 - Nếu `soan_hoan_tien` ở mức tự làm, lời hứa sẽ là **"Trợ lý giải quyết khiếu nại cho bạn"** — hứa kết quả.
@@ -356,16 +366,21 @@
 | **Có gọi AI thật không?** | **Có, chỉ ở tab ④** (bonus), tách riêng để không ảnh hưởng luồng demo chính. Model `gpt-4.1-mini` qua OpenAI Chat Completions, structured output (JSON schema strict). Mỗi lượt gửi toàn bộ lịch sử chat + ngữ cảnh đơn dựng. Mức tự chủ được ép ở 2 lớp: (1) schema chỉ có 2 tool tự làm (`yeu_cau_bang_chung`, `chuyen_truong_nhom`) — tool tiền và phạt shop **không tồn tại** với model; (2) luật chặn phía server chạy sau model (chưa rõ đơn → chặn mọi tool; "chỉ trả lời"/"hướng dẫn" → chặn tool; `chuyen_truong_nhom` chờ khách bấm xác nhận). Tab ④ có thêm quyết định "Chỉ trả lời, không hành động" cho câu ngoài luồng (xin SĐT, hỏi hạn). API key để trong `.env` phía server, không tới trình duyệt, không ghi log, không commit. |
 | **Luồng demo bắt buộc** | **KB02** (mô tả đã sửa) đi hết 3 tab: người mua → shop phản hồi → trưởng nhóm duyệt. **KB07** (người bán đúng). Thêm KB01 (duyệt nhanh), KB03 (tin cụt) và ô chat tự do cho ca lạ. |
 
-**Bảng ghi chú ảnh chụp màn hình có đánh số**
+**Bảng ghi chú ảnh chụp màn hình có đánh số** *(mỗi số chỉ dùng một lần, ①–⑮ trên 3 ảnh; cả 3 ảnh là cùng một lượt bấm ca KB02)*
 
 | Ảnh / số | Màn hình / thành phần được chỉ tới | HAX / PAIR | Mức tự chủ thể hiện |
 |---|---|---|---|
-| **Ảnh #1** — [`anh1-nguoimua-KB02-danhso.png`](prototype/anh1-nguoimua-KB02-danhso.png)<br>Tab ① Người mua, ca KB02, bật nhãn HAX/PAIR | **①** Nhãn đầu chat "Trợ lý AI · không tự hoàn tiền, không tự đóng khiếu nại"<br>**②** Nút "Gặp nhân viên" luôn có ở góc chat<br>**③** Dòng hệ thống "Tin xin bằng chứng đã tới shop. Hạn phản hồi 48h."<br>**④** Tin AI "Đã chuyển thành công cho trưởng nhóm…" — chỉ hiện sau khi tool chạy xong<br>**⑤** Thẻ đối chiếu 3 dòng: "Mô tả hiện tại … SAU ngày bạn đặt", "Mô tả lúc đặt … theo ảnh bạn gửi — sàn chưa xác minh"<br>**⑥** Độ chắc "Chưa đủ căn cứ để xử lý. Hồ sơ không bị đóng." + thang 3 mức<br>**⑦** Dòng hạn "Hạn yêu cầu trả hàng: 19/11 — còn 6 ngày", tách khỏi trạng thái chờ | ① G1 · ② PAIR "đường lui" · ④ PAIR báo sau khi thành công · ⑤ G11 · ⑥ G2, G10 · ⑦ G2 | ③ `yeu_cau_bang_chung` **tự làm** (đơn đã rõ)<br>②④ `chuyen_truong_nhom` **tự làm sau khi khách xác nhận** |
-| **Ảnh #2** — [`anh2-truongnhom-KB02-danhso.png`](prototype/anh2-truongnhom-KB02-danhso.png)<br>Tab ③ Trưởng nhóm, ca KB02 | **⑧** "Trợ lý AI tóm tắt (không phải phán quyết)"<br>**⑨** Ô "Luật duyệt" bên phải<br>**⑩** Nút "Duyệt hoàn tiền" (bấm mới mở hộp xác nhận số tiền + cảnh báo "rất khó lấy lại")<br>**⑪** Nút "Từ chối khiếu nại" — chỉ mở vì dòng "Shop: đã phản hồi"<br>**⑫** Hàng nút không có "Phạt/khoá shop"; chỉ có "Chuyển bộ phận chuyên trách" | ⑧ G11 · ⑩ G16 · ⑪ G10 (hai bên cùng được nghe) | ⑩ `soan_hoan_tien` **cần trưởng nhóm duyệt**<br>⑪ `tu_choi_khieu_nai` **cần duyệt**, chỉ mở khi shop phản hồi / quá 48h<br>⑫ `phat_shop` **cấm** — không có nút |
+| **Ảnh #1** — [`anh1-nguoimua-KB02-danhso.png`](prototype/anh1-nguoimua-KB02-danhso.png)<br>Tab ① Người mua, KB02, ngay sau khi khách xác nhận chuyển nhân viên (shop chưa phản hồi), bật nhãn HAX/PAIR | **①** Nhãn đầu chat "Trợ lý AI · không tự hoàn tiền, không tự đóng khiếu nại"<br>**②** Nút "Gặp nhân viên" luôn có ở góc chat<br>**③** Dòng hệ thống "Tin xin bằng chứng đã tới shop. Hạn phản hồi 48h."<br>**④** Tin AI "Đã chuyển thành công cho trưởng nhóm…" — chỉ hiện sau khi tool chạy xong<br>**⑤** Thẻ đối chiếu 3 dòng, mỗi dòng ghi nguồn: "theo đơn", "cập nhật 11/11 — SAU ngày bạn đặt", "ảnh của người mua — sàn chưa xác minh" + nhãn trạng thái "Chưa đủ căn cứ để xử lý. Shop đang có 48h để phản hồi. Hồ sơ không bị đóng."<br>**⑥** Độ chắc: thang 3 mức bằng lời + lý do. Panel **cập nhật theo hồ sơ**: đã có 2 ảnh của khách (chưa xác minh), đang chờ shop. Khi shop phản hồi thì lên "Đủ căn cứ để chuyển duyệt — nhân viên quyết"; khi nhân viên quyết thì ghi "quyết định của người, không phải của trợ lý".<br>**⑦** Dòng hạn "Hạn yêu cầu trả hàng: 19/11 — còn 6 ngày" + "Yêu cầu đã nộp trong hạn — chờ xét không làm mất quyền", tách khỏi trạng thái chờ<br>**⑧** Nhật ký "Việc AI đã làm": mỗi dòng có nhãn mức (Tự làm / Chỉ đọc); `chuyen_truong_nhom` có nút **Rút lại** | ① G1 · ② PAIR "đường lui" · ③ G1 (nói rõ đã làm gì) · ④ PAIR báo sau khi thành công · ⑤ G11 · ⑥ G2, G10 · ⑦ G2 · ⑧ G9 (sửa/rút lại được) | ③ `yeu_cau_bang_chung` **tự làm** (đơn đã rõ)<br>②④⑧ `chuyen_truong_nhom` **tự làm sau khi khách xác nhận**, có hoàn tác "Rút lại" |
+| **Ảnh #2** — [`anh2-truongnhom-KB02-danhso.png`](prototype/anh2-truongnhom-KB02-danhso.png)<br>Tab ③ Trưởng nhóm, KB02, sau khi shop đã phản hồi | **⑨** "Trợ lý AI tóm tắt (không phải phán quyết)"<br>**⑩** Ô "Luật duyệt": hoàn tiền phải xác nhận; từ chối chỉ mở khi shop phản hồi/quá 48h, bắt buộc lý do; phạt/khoá shop không có ở đây<br>**⑪** Nút "Duyệt hoàn tiền" — bấm mới mở hộp xác nhận số tiền + cảnh báo "rất khó lấy lại"<br>**⑫** Nút "Từ chối khiếu nại" — trước khi shop phản hồi nút này bị khoá kèm dòng giải thích; bấm thì bắt buộc ghi lý do gửi người mua<br>**⑬** Dòng "Shop: đã phản hồi" — điều kiện mở ⑫<br>**⑭** Hàng nút không có "Phạt/khoá shop"; chỉ có "Chuyển bộ phận chuyên trách" | ⑨ G11 · ⑩ G11 (giải thích luật cho người duyệt) · ⑪ G16 · ⑫⑬ G10 + PAIR "hai bên cùng được nghe" · ⑭ Rubric riêng #5 | ⑪ `soan_hoan_tien` **cần trưởng nhóm duyệt**<br>⑫⑬ `tu_choi_khieu_nai` **cần duyệt**, chỉ mở khi shop phản hồi / quá 48h (kể cả hàng duyệt nhanh)<br>⑭ `phat_shop` **cấm** — không có nút |
+| **Ảnh #3** — [`anh3-xacnhan-KB02-danhso.png`](prototype/anh3-xacnhan-KB02-danhso.png)<br>Tab ① Người mua, KB02, lúc khách bấm "Chuyển nhân viên xem xét" | **⑮** Hộp xác nhận "Chuyển nhân viên xem xét? Hồ sơ gồm: đơn #DH002, 2 bằng chứng đã gửi, thẻ đối chiếu 3 dòng. Trợ lý **không** ra quyết định hoàn tiền hay từ chối" + nút "Quay lại" / "Xác nhận chuyển" | ⑮ G16 (cho biết hậu quả trước khi bấm) — đúng chỗ §3 KB02 trỏ tới | ⑮ `chuyen_truong_nhom` **tự làm sau khi khách xác nhận** |
 
-![Ảnh #1 — tab Người mua, KB02, đánh số ①–⑦](prototype/anh1-nguoimua-KB02-danhso.png)
+**Nhãn tím trên Ảnh #1** (bật bằng ô "Hiện nhãn HAX/PAIR") ghi nguyên tắc ngay trên màn hình: "G9 · sửa được" gắn với tin AI có nút "Mình gửi nhầm ảnh" (gỡ ảnh khỏi hồ sơ) và "G9 · rút lại được" gắn với nhật ký ⑧. "G15 · nói rõ còn thiếu gì" gắn với ô "Bằng chứng hai phía" (dòng ✘ "còn thiếu: Bản mô tả lúc đặt…" phía shop). "G1 · Luật AI Đ11" gắn với ①.
 
-![Ảnh #2 — tab Trưởng nhóm, KB02, đánh số ⑧–⑫](prototype/anh2-truongnhom-KB02-danhso.png)
+![Ảnh #1 — tab Người mua, KB02, đánh số ①–⑧](prototype/anh1-nguoimua-KB02-danhso.png)
+
+![Ảnh #2 — tab Trưởng nhóm, KB02, đánh số ⑨–⑭](prototype/anh2-truongnhom-KB02-danhso.png)
+
+![Ảnh #3 — hộp xác nhận chuyển nhân viên, KB02, đánh số ⑮](prototype/anh3-xacnhan-KB02-danhso.png)
 
 **Ảnh phụ** (không đánh số, minh hoạ thêm):
 
@@ -379,9 +394,9 @@
 | [`kb07-shop-owner.png`](prototype/kb07-shop-owner.png) | KB07 phía người bán: bảng size, ảnh khách gửi, sàn đề nghị shop gửi ảnh đóng gói |
 | [`kb07-staff.png`](prototype/kb07-staff.png) | KB07 phía trưởng nhóm: bằng chứng hai phía, tóm tắt AI không phán quyết |
 
-**Bằng chứng lời gọi AI thật ở quyết định chính (bonus):** [`anh3-bonus.png`](prototype/anh3-bonus.png) — tab ④, model `gpt-4.1-mini-2025-04-14`, ngữ cảnh KB07. Lượt 1 khách kêu "áo L mặc chật, hoàn tiền" → model trả **Xin thêm bằng chứng** · Chưa đủ căn cứ, không gọi tool. Lượt 2 khách gửi ảnh tem L + số đo nách–nách 53 cm → model trả **Chuyển nhân viên**, tự tính 53×2 = 106 cm nằm trong bảng size L "theo bạn gửi", gọi `chuyen_truong_nhom` (mức Tự làm) và chỉ chuyển sau khi khách bấm xác nhận. Không có API key trong ảnh hay trong mã phía trình duyệt.
+**Bằng chứng lời gọi AI thật ở quyết định chính (bonus):** [`anh4-bonus-ai-that.png`](prototype/anh4-bonus-ai-that.png) — tab ④, model `gpt-4.1-mini-2025-04-14`, ngữ cảnh KB07. Lượt 1 khách kêu "áo L mặc chật, hoàn tiền" → model trả **Xin thêm bằng chứng** · Chưa đủ căn cứ, không gọi tool. Lượt 2 khách gửi ảnh tem L + số đo nách–nách 53 cm → model trả **Chuyển nhân viên**, tự tính 53×2 = 106 cm nằm trong bảng size L "theo bạn gửi", gọi `chuyen_truong_nhom` (mức Tự làm) và chỉ chuyển sau khi khách bấm xác nhận. Không có API key trong ảnh hay trong mã phía trình duyệt.
 
-![Ảnh #3 — AI thật, KB07: xin bằng chứng → chuyển nhân viên](prototype/anh3-bonus.png)
+![Ảnh bonus — AI thật, KB07: xin bằng chứng → chuyển nhân viên](prototype/anh4-bonus-ai-that.png)
 
 **Quyết định thiết kế: độ chắc / bằng chứng / điều khiển tự chủ**
 
@@ -389,7 +404,7 @@
 |---|---|---|---|
 | Cách hiện độ chắc: % tin cậy / thang bằng lời | Thang 3 mức bằng lời: "Thiếu thông tin" · "Chưa đủ căn cứ" · "Đủ căn cứ để chuyển duyệt", luôn kèm câu "Hồ sơ không bị đóng" (Ảnh #1 ⑥) | Người mua và trưởng nhóm đọc ra ngay bước tiếp theo; mức cao nhất cũng chỉ là "đủ để **chuyển duyệt**", không phải "đủ để hoàn". | % dễ bị đọc là xác suất thắng kiện ("80% được hoàn") và AI không có cơ sở để tính con số đó. |
 | Cách hiện bằng chứng: đoạn văn giải thích / thẻ đối chiếu tách nguồn | Thẻ đối chiếu, mỗi dòng ghi nguồn: "theo đơn", "đã sửa 11/11", "chưa xác minh", "theo ảnh bạn gửi" (Ảnh #1 ⑤) | Chỉ ra đúng chỗ thiếu của lỗi ngữ cảnh KB02/KB07; cùng một thẻ dùng lại ở tab trưởng nhóm. | Đoạn văn trộn nguồn đã xác minh với lời kể, chính là lỗi KB02 (lấy mô tả hiện tại làm căn cứ). |
-| Điều khiển tự chủ: chỉ nói bằng lời / cảnh báo rồi vẫn cho làm / nhãn mức + khoá nút | Nhãn mức (Tự làm / Cần duyệt / Cấm) trên từng dòng nhật ký tool; hộp xác nhận cho chuyển người và hoàn tiền; nút từ chối khoá theo luật 48h; không có nút phạt (Ảnh #1 ②③④, Ảnh #2 ⑨⑩⑪⑫) | Mức tự chủ §4 nằm ở thiết kế màn hình, không phụ thuộc vào câu chữ AI. | Chỉ nói bằng lời thì không chặn được khi AI sai; cảnh báo xong vẫn cho bấm thì người duyệt vội vẫn đóng hồ sơ trước khi nghe shop. |
+| Điều khiển tự chủ: chỉ nói bằng lời / cảnh báo rồi vẫn cho làm / nhãn mức + khoá nút | Nhãn mức (Tự làm / Cần duyệt / Cấm) trên từng dòng nhật ký tool; hộp xác nhận cho chuyển người và hoàn tiền; nút từ chối khoá theo luật 48h; không có nút phạt (Ảnh #1 ②③④⑧, Ảnh #2 ⑩⑪⑫⑬⑭, Ảnh #3 ⑮) | Mức tự chủ §4 nằm ở thiết kế màn hình, không phụ thuộc vào câu chữ AI. | Chỉ nói bằng lời thì không chặn được khi AI sai; cảnh báo xong vẫn cho bấm thì người duyệt vội vẫn đóng hồ sơ trước khi nghe shop. |
 
 ---
 
@@ -409,6 +424,7 @@
 
 | | |
 |---|---|
+| **Hình thức demo** | Nhóm **xung phong demo trước lớp** trong khối demo 30 phút. |
 | **Ca lạ được đưa ra** | Tin nhắn cụt, ngắn, không liên quan tới nội dung khiếu nại, ví dụ xin số điện thoại của shop ("cho xin sđt shop"). |
 | **Prototype xử lý thế nào** | Coi đây là yêu cầu **ngoài phạm vi** (KB08, lớp ③): AI **không cung cấp** số điện thoại/địa chỉ và **không gọi tool nào**. Lời AI: *"Mình không cung cấp được số điện thoại hay địa chỉ cá nhân của shop — để bảo vệ cả hai bên. Bạn nhắn shop ngay trong chat của đơn; tin nhắn ở đó cũng được dùng làm bằng chứng nếu cần."* Kèm 2 nút: "Mở chat với shop (qua sàn)" và "Chuyển nhân viên" (đường lui).<br>Tin cụt không nói đơn nào (như "hàng sai rồi"): AI không đoán, hỏi lại đúng một câu "Bạn đang muốn khiếu nại đơn hàng nào?" kèm danh sách đơn gần đây (G10); không gửi gì cho shop khi chưa rõ đơn.<br>Tab ④ (AI thật): cùng câu xin SĐT, model trả quyết định "Chỉ trả lời, không hành động", không có tool nào. |
 | **Nhóm có đổi ý không?** | Không. Ca này nằm trong việc "KHÔNG làm" số 3 ở §1 và đã có luật ở §4 ("chưa rõ đơn thì không gửi `yeu_cau_bang_chung`"), nên prototype xử lý đúng mức tự chủ đã đặt mà không cần đổi. |

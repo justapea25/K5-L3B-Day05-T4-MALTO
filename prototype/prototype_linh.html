@@ -580,10 +580,12 @@ const evl=a=>a.length?a.map(([t,v])=>`<div class="${v?'ok':'no'}">${v?'✔':'✘
 function render(){
   const box=$("#msgs"), prevScroll=box.scrollTop;
   box.innerHTML=S.msgs.length?"":`<div class="m sys">Chọn một ca ở thanh trên, hoặc gõ tin nhắn để thử ca lạ.<br>Bạn đang trò chuyện với <b>trợ lý AI</b>; luôn có nút <b>Gặp nhân viên</b>.</div>`;
+  // Nút gắn với tin AI/người mua gần nhất — dòng hệ thống ("tin đã tới shop"...) không làm mất nút
+  let chipIdx=-1; for(let i=S.msgs.length-1;i>=0;i--){ if(S.msgs[i].from!=="sys"){ chipIdx=i; break; } }
   S.msgs.forEach((m,i)=>{
     const d=document.createElement("div"); d.className="m "+m.from;
     d.innerHTML=(m.from==="ai"?'<div class="who">Trợ lý AI</div>':"")+m.html+(m.hax?`<span class="hax">${m.hax}</span>`:"");
-    if(m.chips && i===S.msgs.length-1){
+    if(m.chips && i===chipIdx){
       const c=document.createElement("div"); c.className="chips";
       m.chips.forEach(([l,f],j)=>{const b=document.createElement("button");b.className="chip"+(j>0?" sec":"");b.textContent=l;b.onclick=f;c.appendChild(b)});
       d.appendChild(c);
