@@ -95,6 +95,9 @@
   .samples b{font-size:11px;color:var(--muted);margin-right:2px}
   .smp{border:1px solid #d6cdf3;background:#f7f4ff;color:var(--hax);border-radius:14px;padding:3px 9px;font-size:12px;cursor:pointer}
   .smp:hover{background:#ece6ff}
+  .aires{margin-top:8px;padding-top:6px;border-top:1px dashed #d6cdf3}
+  pre.raw{white-space:pre-wrap;word-break:break-word;font-size:11.5px;background:#f6f7f9;border-radius:8px;padding:8px;max-height:320px;overflow:auto}
+  #v-ai .chat .bar{padding:6px 12px}
   textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px;font:inherit;min-height:60px}
 </style>
 </head>
@@ -222,32 +225,39 @@
 
 <!-- ============ AI THẬT (bonus) ============ -->
 <main id="v-ai" class="hidden">
-  <section class="stack">
-    <div class="card" style="border-color:#c9b8f0">
-      <span class="hax">Bonus · lời gọi AI thật</span>
-      <h3>🔌 Hỏi model thật (OpenAI)</h3>
-      <p class="empty" style="margin:0 0 8px;font-size:12.5px">Model nhận <b>tin nhắn khách</b> + <b>ngữ cảnh của ca đang mở</b> (bên dưới) và chỉ được chọn 1 trong 3 quyết định: hướng dẫn gửi yêu cầu · xin thêm bằng chứng · chuyển nhân viên. Schema chỉ có 2 tool "Tự làm" — tool chuyển tiền và phạt shop <b>không tồn tại</b> với model.</p>
-      <label class="empty" for="aiMsg" style="font-size:12px">Tin nhắn khách (tự điền tin gần nhất của ca đang mở — sửa hoặc gõ ca lạ vào đây):</label>
-      <div class="samples" id="samplesAI" style="padding:4px 0 8px;border:0"></div>
-      <textarea id="aiMsg" placeholder="Ví dụ: shop bán hàng giả, khoá shop đi"></textarea>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px">
-        <button class="btn" id="btnAI" style="background:var(--hax)">Hỏi AI thật</button>
-        <span id="aiStatus" class="empty" style="font-size:12px"></span>
-      </div>
+  <section class="card chat" style="border-color:#c9b8f0">
+    <span class="hax">Bonus · lời gọi AI thật</span>
+    <div class="chat-head">
+      <strong>🔌 Chat với model thật</strong>
+      <span class="ai-badge" id="aiStatus">đang kiểm tra…</span>
+      <button class="human" id="aiReset">Xoá hội thoại</button>
     </div>
-    <div class="card">
-      <h3>Ngữ cảnh gửi kèm (từ ca đang mở ở tab ①)</h3>
-      <div id="aiCtx" class="empty">—</div>
+    <div class="bar" style="border-bottom:1px solid var(--line)"><b>Ngữ cảnh đơn:</b><span id="aiCtxBtns"></span></div>
+    <div class="msgs" id="aiMsgs"></div>
+    <div class="samples" id="samplesAI"></div>
+    <div class="composer">
+      <input id="aiInp" placeholder="Nhập tin nhắn khách rồi Enter…">
+      <button id="aiSend" style="background:var(--hax)">Gửi</button>
     </div>
   </section>
   <section class="stack">
     <div class="card">
-      <h3>Kết quả của model</h3>
-      <div id="aiBox" class="empty">Chưa hỏi.</div>
+      <h3>Ngữ cảnh đầy đủ gửi cho model</h3>
+      <div id="aiCtxView"></div>
     </div>
     <div class="card">
-      <h3>Các lần đã hỏi trong buổi này</h3>
-      <div id="aiHist" class="empty">—</div>
+      <h3>Luật chặn phía server (chạy sau model)</h3>
+      <ul class="r">
+        <li>Model chỉ có 2 tool: <code>yeu_cau_bang_chung</code> (gửi shop), <code>chuyen_truong_nhom</code>. Tool chuyển tiền và phạt shop <b>không tồn tại</b> trong schema.</li>
+        <li>Chưa xác định đơn → chặn mọi tool.</li>
+        <li>"Chỉ trả lời" / "Hướng dẫn gửi yêu cầu" → chặn mọi tool.</li>
+        <li><code>chuyen_truong_nhom</code> chỉ khi quyết định là chuyển nhân viên, và chờ khách bấm xác nhận.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Xem thô (cho người chấm)</h3>
+      <details><summary>Request gần nhất gửi lên server</summary><pre id="aiRaw" class="raw">—</pre></details>
+      <details><summary>System prompt + schema</summary><pre id="aiPrompt" class="raw">—</pre></details>
     </div>
   </section>
 </main>
@@ -595,69 +605,112 @@ function render(){
 
 /* ======================= AI THẬT (bonus) ======================= */
 const AI_ON = location.protocol.startsWith("http");
-const strip = h => { const d=document.createElement("div"); d.innerHTML=h; return d.textContent.trim(); };
-const DECISION = {huong_dan_gui_yeu_cau:"Hướng dẫn gửi yêu cầu trả hàng",xin_them_bang_chung:"Xin thêm bằng chứng",chuyen_nhan_vien:"Chuyển nhân viên"};
+const DECISION = {huong_dan_gui_yeu_cau:"Hướng dẫn gửi yêu cầu",xin_them_bang_chung:"Xin thêm bằng chứng",chuyen_nhan_vien:"Chuyển nhân viên",tra_loi_khong_hanh_dong:"Chỉ trả lời, không hành động"};
 const CONF = {thieu_thong_tin:["Thiếu thông tin","c0"],chua_du_can_cu:["Chưa đủ căn cứ","c1"],du_can_cu_de_chuyen_duyet:["Đủ căn cứ để chuyển duyệt","c2"]};
-async function checkAI(){
-  if(!AI_ON){ $("#aiStatus").innerHTML='Đang mở file trực tiếp — chạy <code>node prototype/server.mjs</code> rồi mở <code>http://localhost:5173</code> để bật.'; $("#btnAI").disabled=true; return; }
-  try{ const j=await (await fetch("/api/status")).json(); $("#aiStatus").textContent=j.ready?`Sẵn sàng · ${j.model}`:"Chưa có OPENAI_API_KEY trong .env"; $("#btnAI").disabled=!j.ready; }
-  catch{ $("#aiStatus").textContent="Không kết nối được server"; $("#btnAI").disabled=true; }
+const TOOL_TO = {yeu_cau_bang_chung:"gửi shop",chuyen_truong_nhom:"gửi trưởng nhóm"};
+const QUYEN_DOC = "Trợ lý đọc được: thông tin đơn, chat đơn, trang sản phẩm hiện tại + ngày cập nhật. KHÔNG có bản lưu mô tả lúc đặt. KHÔNG xác minh được ảnh.";
+const AI_CTX = {
+  none:{label:"Chưa chọn đơn", photo:null, data:{don:null,
+    don_gan_day:["#DH002 · Áo khoác gió · Xanh navy · nhận 12/11","#DH007 · Áo polo đen · Size L · nhận 11/11","#DH001 · Áo thun basic · Size L · nhận 11/11"]}},
+  KB02:{label:"KB02 · Áo navy → đỏ", photo:'📷 ao_nhan_duoc.jpg — áo màu đỏ · 📷 xac_nhan_don_0911.png — "Màu: Xanh navy"', data:{
+    don:{ma:"#DH002",san_pham:"Áo khoác gió",bien_the_da_chon:"Xanh navy",gia:"420.000đ",ngay_dat:"09/11",ngay_nhan:"12/11",han_tra_hang:"19/11",hom_nay:"13/11"},
+    mo_ta_hien_tai:{noi_dung:"Màu đỏ",cap_nhat:"11/11 — SAU ngày đặt"}, mo_ta_luc_dat:"Không có bản lưu — chưa xác minh",
+    chat_don:[], phan_hoi_cua_shop:"Chưa có"}},
+  KB07:{label:"KB07 · Áo L mặc chật", photo:"📷 tem_ao.jpg — L · 📷 do_nach_nach.jpg — 53 cm", data:{
+    don:{ma:"#DH007",san_pham:"Áo polo đen",bien_the_da_chon:"Size L",gia:"280.000đ",ngay_dat:"08/11",ngay_nhan:"11/11",han_tra_hang:"18/11",hom_nay:"13/11"},
+    bang_size_luc_mua:"L = vòng ngực 104–108 cm (trang không sửa sau ngày đặt)",
+    chat_don:[], phan_hoi_cua_shop:"Chưa có"}},
+  KB01:{label:"KB01 · Shop đã nhận lỗi", photo:"📷 tem_size_M.jpg — M", data:{
+    don:{ma:"#DH001",san_pham:"Áo thun basic",bien_the_da_chon:"Size L",gia:"189.000đ",ngay_dat:"08/11",ngay_nhan:"11/11",han_tra_hang:"18/11",hom_nay:"13/11"},
+    chat_don:["Shop (11/11): Bên em gửi nhầm size M ạ, chị thông cảm"], phan_hoi_cua_shop:"Đã xác nhận gửi nhầm trong chat đơn"}}
+};
+const SAMPLES=[
+  ["Tin cụt","hàng sai rồi, xử lý đi"],
+  ["Shop nhận lỗi","Mình đặt size L mà nhận size M, shop cũng nhắn là gửi nhầm rồi"],
+  ["Doạ bóc phốt","Không hoàn tiền ngay là tôi bóc phốt shop!"],
+  ["Hàng giả · khoá shop","Shop bán hàng giả, khoá shop đi!"],
+  ["Xin SĐT shop","Cho tôi số điện thoại của shop"],
+  ["Hỏi hạn","còn mấy ngày để trả hàng?"],
+];
+const AI = {ctx:"none", turns:[], busy:false};
+const aiContext = () => ({...AI_CTX[AI.ctx].data, chinh_sach:POLICY, quyen_doc:QUYEN_DOC});
+function aiHistory(){
+  return AI.turns.filter(t=>!t.error).map(t=>{
+    if(t.role==="user") return {role:"user",content:t.text};
+    const done=t.out.tool_calls.filter(x=>x.status!=="cho").map(x=>`${x.ten} (${x.status==="huy"?"khách không đồng ý":"đã thực hiện"})`);
+    const wait=t.out.tool_calls.filter(x=>x.status==="cho").map(x=>`${x.ten} (đang chờ khách xác nhận)`);
+    return {role:"assistant",content:t.out.cau_tra_loi+(done.length||wait.length?`\n[Hệ thống: ${done.concat(wait).join("; ")}]`:"")};
+  });
 }
-const aiHist=[];
-function buildContext(){
-  const o=S.order;
-  return {
-    don: o?{ma:o.id,san_pham:o.item,bien_the_da_chon:o.variant,gia:o.price,ngay_dat:o.ordered,ngay_nhan:o.received,han_tra_hang:o.due,hom_nay:TODAY}:null,
-    the_doi_chieu:S.rows.map(r=>`${r.lb}: ${strip(r.v)} (${strip(r.src)})`),
-    bang_chung_nguoi_mua:S.buyerEv.map(([t,v])=>(v?"đã có: ":"còn thiếu: ")+t),
-    bang_chung_nguoi_ban:S.sellerEv.map(([t,v])=>(v?"đã có: ":"còn thiếu: ")+t),
-    lich_su_chat:S.msgs.filter(m=>m.from!=="sys").slice(-6).map(m=>(m.from==="user"?"Khách: ":"Trợ lý: ")+strip(m.html).slice(0,300)),
-    don_gan_day:o?undefined:Object.values(ORDERS).map(x=>`${x.id} · ${x.item} · ${x.variant} · nhận ${x.received}`),
-    chinh_sach:POLICY};
+function kvHtml(obj){
+  return `<div class="kv">${Object.entries(obj).map(([k,v])=>`<span>${esc(k)}</span><span>${
+    v===null?'<i class="empty">không có</i>':Array.isArray(v)?(v.length?v.map(x=>esc(String(x))).join("<br>"):'<i class="empty">trống</i>'):
+    typeof v==="object"?Object.entries(v).map(([a,b])=>`${esc(a)}: <b>${esc(String(b))}</b>`).join("<br>"):esc(String(v))}</span>`).join("")}</div>`;
 }
-function prepAI(){
-  const lastUser=[...S.msgs].reverse().find(m=>m.from==="user"&&!m.html.includes('class="img"'));
-  if(lastUser) $("#aiMsg").value=strip(lastUser.html);
-  const c=buildContext();
-  $("#aiCtx").className="";
-  $("#aiCtx").innerHTML=c.don?`<div class="kv"><span>Đơn</span><span><b>${c.don.ma}</b> · ${c.don.san_pham} · ${c.don.bien_the_da_chon}</span><span>Hạn</span><span>${c.don.han_tra_hang}</span></div>
-    <ul class="r">${c.the_doi_chieu.map(x=>`<li>${esc(x)}</li>`).join("")}${c.bang_chung_nguoi_mua.concat(c.bang_chung_nguoi_ban).map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`
-    :'<span class="empty">Chưa mở ca nào → model chỉ nhận tin nhắn (sẽ phải hỏi lại đơn nào). Chọn KB02/KB07 ở thanh trên để có ngữ cảnh.</span>';
+function renderAI(){
+  $("#aiCtxBtns").innerHTML=Object.entries(AI_CTX).map(([k,c])=>`<button class="sc ${AI.ctx===k?"on":""}" onclick="setAICtx('${k}')">${c.label}</button>`).join(" ");
+  $("#aiCtxView").innerHTML=kvHtml(aiContext());
+  const box=$("#aiMsgs");
+  box.innerHTML=AI.turns.length?"":`<div class="m sys">Chọn ngữ cảnh đơn ở trên, rồi bấm câu mẫu hoặc tự gõ.<br>Mỗi lượt gửi <b>toàn bộ lịch sử</b> + ngữ cảnh cho model thật.</div>`;
+  AI.turns.forEach((t,i)=>{
+    const d=document.createElement("div");
+    if(t.role==="user"){ d.className="m user"; d.textContent=t.text; }
+    else if(t.error){ d.className="m sys"; d.innerHTML=`<span class="no">Lỗi: ${esc(t.error)}</span>`; }
+    else{
+      const a=t.out, c=CONF[a.do_chac]||[a.do_chac,"c1"];
+      d.className="m ai"; d.style.maxWidth="94%";
+      d.innerHTML=`<div class="who">AI thật · ${esc(t.model||"")}</div>${esc(a.cau_tra_loi)}
+        <div class="aires"><span class="lv read">${DECISION[a.quyet_dinh]||esc(a.quyet_dinh)}</span> <span class="status ${c[1]}" style="display:inline-block;margin:0;padding:1px 7px;font-size:11px">${c[0]}</span>
+        ${a.tool_calls.length?a.tool_calls.map((x,j)=>`<div class="le" style="margin-top:6px;background:#fff">${'<span class="lv auto">Tự làm</span>'}<div><code>${x.ten}</code> → ${TOOL_TO[x.ten]}<br><span class="empty">${esc(x.noi_dung)}</span></div><div class="act">${
+          x.status==="cho"?`<button onclick="aiTool(${i},${j},true)">Khách xác nhận</button><button onclick="aiTool(${i},${j},false)">Không</button>`:
+          x.status==="huy"?'<span class="empty">khách không đồng ý</span>':`<span class="ok">✔ ${x.ten==="chuyen_truong_nhom"?"đã chuyển":"đã gửi"} (mô phỏng)</span>`}</div></div>`).join(""):'<div class="empty" style="font-size:12px;margin-top:4px">Không gọi tool.</div>'}
+        ${a.chan.length?`<div class="ignored">🛡 ${a.chan.map(esc).join("<br>🛡 ")}</div>`:""}
+        <details style="margin-top:4px;font-size:12px"><summary>Lý do · còn thiếu</summary><ul class="r">${a.ly_do.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>${a.con_thieu.length?`<div class="no">Còn thiếu: ${a.con_thieu.map(esc).join("; ")}</div>`:""}</details></div>`;
+    }
+    box.appendChild(d);
+  });
+  if(AI.busy){ const d=document.createElement("div"); d.className="m sys"; d.textContent="AI đang trả lời…"; box.appendChild(d); }
+  box.scrollTop=box.scrollHeight;
+  const sm=$("#samplesAI"); sm.innerHTML="<b>Câu mẫu:</b>";
+  const chips=[...SAMPLES]; if(AI_CTX[AI.ctx].photo) chips.unshift(["📷 Gửi ảnh",AI_CTX[AI.ctx].photo]);
+  chips.forEach(([l,t])=>{ const b=document.createElement("button"); b.className="smp"; b.textContent=l; b.title=t; b.onclick=()=>aiSend(t); sm.appendChild(b); });
+  $("#aiSend").disabled=AI.busy||!AI_ON;
 }
-async function askRealAI(){
-  const box=$("#aiBox");
-  const msg=$("#aiMsg").value.trim();
-  if(!msg){ box.innerHTML='<span class="empty">Nhập tin nhắn khách trước.</span>'; return; }
-  const context=buildContext();
-  box.className=""; box.innerHTML='<span class="empty">Đang hỏi AI…</span>'; $("#btnAI").disabled=true;
+function setAICtx(k){ AI.ctx=k; AI.turns=[]; renderAI(); }
+function aiTool(i,j,ok){ AI.turns[i].out.tool_calls[j].status=ok?"xong":"huy"; renderAI(); }
+async function aiSend(text){
+  text=(text||"").trim(); if(!text||AI.busy) return;
+  if(!AI_ON){ alert("Chạy node prototype/server.mjs rồi mở http://localhost:5173"); return; }
+  AI.turns.push({role:"user",text}); AI.busy=true; renderAI();
+  const payload={history:aiHistory(),context:aiContext()};
+  $("#aiRaw").textContent=JSON.stringify(payload,null,2);
   try{
-    const r=await fetch("/api/triage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:msg,context})});
+    const r=await fetch("/api/triage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
     const j=await r.json(); if(!r.ok) throw new Error(j.error||("HTTP "+r.status));
-    const a=j.output, c=CONF[a.do_chac]||[a.do_chac,"c1"];
-    box.innerHTML=`<div class="empty" style="font-size:11.5px">Tin đã gửi: "${esc(msg.slice(0,140))}${msg.length>140?"…":""}" · model ${esc(j.model)}</div>
-      <div class="kv" style="margin-top:6px"><span>Quyết định</span><span><b>${DECISION[a.quyet_dinh]||esc(a.quyet_dinh)}</b></span>
-      <span>Độ chắc</span><span><span class="status ${c[1]}" style="display:inline-block;margin:0;padding:2px 8px">${c[0]}</span></span>
-      <span>Tool AI tự làm</span><span>${a.tool_ai_tu_lam.length?a.tool_ai_tu_lam.map(t=>`<code>${esc(t)}</code> <span class="lv auto">Tự làm</span>`).join(" "):'<span class="empty">không gọi tool</span>'}</span></div>
-      <ul class="r">${a.ly_do.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
-      ${a.con_thieu.length?`<div class="no" style="font-size:13px;margin-top:4px">Còn thiếu: ${a.con_thieu.map(esc).join("; ")}</div>`:""}
-      <div class="m ai" style="max-width:100%;margin-top:8px"><div class="who">AI thật trả lời</div>${esc(a.cau_tra_loi)}</div>
-      <div class="empty" style="font-size:11.5px;margin-top:4px">Đã ghi vào <code>prototype/ai-log.jsonl</code>. Không có tiền đi: tool chuyển tiền không nằm trong schema.</div>`;
-    aiHist.unshift(`<div class="le"><span class="lv read">${esc(S.order?S.order.id:"—")}</span><div>"${esc(msg.slice(0,80))}${msg.length>80?"…":""}"<br><b>${DECISION[a.quyet_dinh]||esc(a.quyet_dinh)}</b> · ${c[0]}</div></div>`);
-    $("#aiHist").className="log"; $("#aiHist").innerHTML=aiHist.join("");
-  }catch(e){ box.innerHTML=`<span class="no">Lỗi: ${esc(String(e.message||e))}</span>`; }
-  finally{ checkAI(); }
+    j.output.tool_calls.forEach(x=>x.status=x.ten==="chuyen_truong_nhom"?"cho":"xong");
+    AI.turns.push({role:"assistant",out:j.output,model:j.model});
+  }catch(e){ AI.turns.push({role:"assistant",error:String(e.message||e)}); }
+  AI.busy=false; renderAI();
+}
+async function checkAI(){
+  if(!AI_ON){ $("#aiStatus").textContent="Đang mở file trực tiếp — chạy server để bật"; renderAI(); return; }
+  try{
+    const j=await (await fetch("/api/status")).json(); $("#aiStatus").textContent=j.ready?`Sẵn sàng · ${j.model}`:"Chưa có OPENAI_API_KEY";
+    const p=await (await fetch("/api/prompt")).json(); $("#aiPrompt").textContent=p.system+"\n\n— SCHEMA —\n"+JSON.stringify(p.schema,null,2);
+  }catch{ $("#aiStatus").textContent="Không kết nối được server"; }
+  renderAI();
 }
 
 /* ======================= WIRING ======================= */
 function go(v){
   document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.view===v));
   ["buyer","seller","staff","ai"].forEach(x=>$("#v-"+x).classList.toggle("hidden",x!==v));
-  if(v==="ai") prepAI();
+  if(v==="ai") renderAI();
 }
 function start(k){
   if(S) S.timers.forEach(clearInterval); reset();
   S.sc=k; document.querySelectorAll(".sc").forEach(b=>b.classList.toggle("on",b.dataset.sc===k));
-  go("buyer"); $("#aiBox").className="empty"; $("#aiBox").innerHTML="Chưa hỏi."; $("#aiMsg").value=""; ({KB02,KB07,KB01,KB03})[k]();
+  go("buyer"); ({KB02,KB07,KB01,KB03})[k]();
 }
 document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>go(t.dataset.view));
 document.querySelectorAll(".sc").forEach(b=>b.onclick=()=>start(b.dataset.sc));
@@ -666,21 +719,9 @@ $("#inp").onkeydown=e=>{if(e.key==="Enter") $("#send").click();};
 $("#btnHuman").onclick=()=>human();
 $("#haxToggle").onchange=e=>document.body.classList.toggle("show-hax",e.target.checked);
 $("#btnTimeout").onclick=()=>{ if(!S.staffCase){alert("Chưa có hồ sơ. Chạy KB02 hoặc KB07 và chuyển nhân viên trước.");return;} S.deadlineOver=true; sys("⏱ Hết 48h, shop chưa phản hồi → hồ sơ vẫn chờ trưởng nhóm quyết (không tự hoàn, không tự từ chối)."); render(); };
-/* ======================= CÂU MẪU ======================= */
-const SAMPLES=[
-  ["Tin cụt","hàng sai rồi, xử lý đi"],
-  ["Shop nhận lỗi","Mình đặt size L mà nhận size M, shop cũng nhắn là gửi nhầm rồi"],
-  ["Doạ bóc phốt","Không hoàn tiền ngay là tôi bóc phốt shop!"],
-  ["Hàng giả · khoá shop","Shop bán hàng giả, khoá shop đi!"],
-  ["Xin SĐT shop","Cho tôi số điện thoại của shop"],
-];
-function renderSamples(){
-  const mk=(id,fn)=>{ const box=$(id); box.innerHTML="<b>Câu mẫu:</b>";
-    SAMPLES.forEach(([l,t])=>{ const b=document.createElement("button"); b.className="smp"; b.textContent=l; b.title=t; b.onclick=()=>fn(t); box.appendChild(b); }); };
-  mk("#samplesAI",t=>{ $("#aiMsg").value=t; $("#aiMsg").focus(); });
-}
-renderSamples();
-$("#btnAI").onclick=askRealAI;
+$("#aiSend").onclick=()=>{const v=$("#aiInp").value; $("#aiInp").value=""; aiSend(v);};
+$("#aiInp").onkeydown=e=>{if(e.key==="Enter") $("#aiSend").click();};
+$("#aiReset").onclick=()=>{AI.turns=[]; renderAI();};
 reset(); render(); checkAI();
 </script>
 </body>
